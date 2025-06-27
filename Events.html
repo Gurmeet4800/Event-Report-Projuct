@@ -181,14 +181,12 @@
             const handleSetupTypeRadio = (setup) => {
                 try {
                     setFormData((prevFormData) => {
-                        // If the selected setup is already in setupType, deselect it (clear the array)
                         if (prevFormData.setupType.includes(setup)) {
                             return {
                                 ...prevFormData,
                                 setupType: []
                             };
                         }
-                        // Otherwise, set the selected setup as the only item in the array
                         return {
                             ...prevFormData,
                             setupType: [setup]
@@ -397,7 +395,7 @@
                         alert('PDF library failed to load. Please check your internet connection and try again.');
                         throw new Error('jsPDF not loaded. Check CDN or network connectivity.');
                     }
-                    console.log('Starting PDF generation...', formData);
+
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF({
                         orientation: 'portrait',
@@ -406,11 +404,13 @@
                     });
 
                     const margin = 10;
-                    let y = 17;
+                    let y = 15;
                     const pageWidth = 297;
+                    const lineHeight = 5;
 
-                    const imageUrl = './NW18.png';
+                    // Add logo
                     try {
+                        const imageUrl = './NW18.png';
                         const img = await loadImage(imageUrl);
                         const imgWidth = 50;
                         const imgHeight = (img.height * imgWidth) / img.width;
@@ -420,6 +420,7 @@
                         console.warn('Image loading failed:', error.message);
                     }
 
+                    // Header with timestamp
                     const { fileTimestamp, displayTimestamp } = getFormattedDateTime();
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(16);
@@ -429,6 +430,7 @@
                     doc.text(headerText, (pageWidth - headerWidth) / 2, y);
                     y += 10;
 
+                    // Day and created by
                     doc.setFontSize(12);
                     if (formData.daySelection !== 'Select') {
                         doc.text(`Day: ${formData.daySelection}`, margin, y);
@@ -438,6 +440,7 @@
                     }
                     y += 10;
 
+                    // Event Details section
                     doc.setFontSize(12);
                     doc.setTextColor(0);
                     doc.text('Event Details', margin, y);
@@ -446,6 +449,7 @@
                     y += 4;
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(8);
+
                     const eventDetails = [
                         { label: 'Event Name', value: formData.eventName },
                         { label: 'Date', value: formatDate(formData.date) },
@@ -458,13 +462,15 @@
                         { label: 'Broadcast Type', value: formData.broadcastType },
                         ...(formData.broadcastType === 'Live' ? [{ label: 'Live Platform', value: formData.livePlatform }] : [])
                     ];
+
                     eventDetails.forEach((item, index) => {
                         const col = index % 2 === 0 ? 0 : 140;
                         const row = Math.floor(index / 2);
-                        doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * 5);
+                        doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * lineHeight);
                     });
-                    y += Math.ceil(eventDetails.length / 2) * 5 + 4;
+                    y += Math.ceil(eventDetails.length / 2) * lineHeight + 6;
 
+                    // Team Details section
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(12);
                     doc.text('Team Details', margin, y);
@@ -473,6 +479,7 @@
                     y += 4;
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(8);
+
                     const teamDetails = [
                         { label: 'Event Engineer', value: formData.eventEngineer.join(', ') || '' },
                         { label: 'Show Producer', value: formData.showProducer },
@@ -482,13 +489,15 @@
                         { label: 'Sound Engineer', value: formData.soundEngineer },
                         { label: 'Production Control', value: formData.productionControl }
                     ];
+
                     teamDetails.forEach((item, index) => {
                         const col = index % 2 === 0 ? 0 : 140;
                         const row = Math.floor(index / 2);
-                        doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * 5);
+                        doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * lineHeight);
                     });
-                    y += Math.ceil(teamDetails.length / 2) * 5 + 4;
+                    y += Math.ceil(teamDetails.length / 2) * lineHeight + 6;
 
+                    // Event Timing section
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(12);
                     doc.text('Event Timing', margin, y);
@@ -497,6 +506,7 @@
                     y += 4;
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(8);
+
                     const eventTiming = [
                         { label: 'Installation Time', value: formData.installationTime },
                         { label: 'Checking Done', value: formData.checkingDone },
@@ -506,13 +516,15 @@
                         { label: 'Event End Time', value: formData.eventEndTime },
                         { label: 'Event Duration', value: formData.eventDuration }
                     ];
+
                     eventTiming.forEach((item, index) => {
                         const col = index % 2 === 0 ? 0 : 140;
                         const row = Math.floor(index / 2);
-                        doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * 5);
+                        doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * lineHeight);
                     });
-                    y += Math.ceil(eventTiming.length / 2) * 5 + 4;
+                    y += Math.ceil(eventTiming.length / 2) * lineHeight + 6;
 
+                    // Equipment section
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(12);
                     doc.text('Equipment', margin, y);
@@ -521,11 +533,11 @@
                     y += 4;
 
                     const hasHiredEquipment = formData.equipment.some(item => item.hired);
-                    const tableHeaders = hasHiredEquipment
-                        ? [['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Hired', 'Vendor Name', 'Remarks', 'Status']]
-                        : [['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Remarks', 'Status']];
+                    const equipmentHeaders = hasHiredEquipment
+                        ? ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Hired', 'Vendor Name', 'Remarks', 'Status']
+                        : ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Remarks', 'Status'];
 
-                    const tableBody = formData.equipment.map((item, index) => {
+                    const equipmentData = formData.equipment.map((item, index) => {
                         const baseRow = [
                             index + 1,
                             item.name || '',
@@ -544,50 +556,37 @@
                         return baseRow;
                     });
 
-                    const columnStyles = hasHiredEquipment
-                        ? {
-                            0: { cellWidth: 15, halign: 'center' },
-                            1: { cellWidth: 35 },
-                            2: { cellWidth: 30 },
-                            3: { cellWidth: 20 },
-                            4: { cellWidth: 25 },
-                            5: { cellWidth: 25 },
-                            6: { cellWidth: 20 },
-                            7: { cellWidth: 20 },
-                            8: { cellWidth: 30 },
-                            9: { cellWidth: 30 },
-                            10: { cellWidth: 20 }
-                        }
-                        : {
-                            0: { cellWidth: 15, halign: 'center' },
-                            1: { cellWidth: 35 },
-                            2: { cellWidth: 30 },
-                            3: { cellWidth: 20 },
-                            4: { cellWidth: 25 },
-                            5: { cellWidth: 25 },
-                            6: { cellWidth: 20 },
-                            7: { cellWidth: 30 },
-                            8: { cellWidth: 30 }
-                        };
-
                     doc.autoTable({
                         startY: y,
-                        head: tableHeaders,
-                        body: tableBody,
+                        head: [equipmentHeaders],
+                        body: equipmentData,
                         theme: 'grid',
-                        styles: { fontSize: 7, cellPadding: 1.5, textColor: [0, 0, 0], halign: 'left' },
-                        headStyles: { fillColor: [0, 102, 204], textColor: [255, 255, 255], halign: 'center' },
-                        columnStyles: columnStyles,
-                        margin: { left: margin, right: margin }
+                        styles: { 
+                            fontSize: 7, 
+                            cellPadding: 1.5, 
+                            textColor: [0, 0, 0], 
+                            halign: 'left',
+                            valign: 'middle'
+                        },
+                        headStyles: { 
+                            fillColor: [0, 102, 204], 
+                            textColor: [255, 255, 255], 
+                            halign: 'center',
+                            valign: 'middle'
+                        },
+                        margin: { left: margin, right: margin },
+                        tableWidth: pageWidth - (margin * 2)
                     });
                     y = doc.lastAutoTable.finalY + 4;
 
+                    // Live Source section
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(12);
                     doc.text('Live Source', margin, y);
                     y += 2;
                     doc.line(margin, y, pageWidth - margin, y);
                     y += 4;
+
                     doc.autoTable({
                         startY: y,
                         head: [['Sr.No.', 'Name', 'Available', 'Type', 'Bandwidth', 'Note', 'Status']],
@@ -601,27 +600,32 @@
                             item.status || ''
                         ]),
                         theme: 'grid',
-                        styles: { fontSize: 7, cellPadding: 1.5, textColor: [0, 0, 0], halign: 'left' },
-                        headStyles: { fillColor: [0, 102, 204], textColor: [255, 255, 255], halign: 'center' },
-                        columnStyles: {
-                            0: { cellWidth: 15, halign: 'center' },
-                            1: { cellWidth: 50 },
-                            2: { cellWidth: 35 },
-                            3: { cellWidth: 35 },
-                            4: { cellWidth: 35 },
-                            5: { cellWidth: 35 },
-                            6: { cellWidth: 35 }
+                        styles: { 
+                            fontSize: 7, 
+                            cellPadding: 1.5, 
+                            textColor: [0, 0, 0], 
+                            halign: 'left',
+                            valign: 'middle'
                         },
-                        margin: { left: margin, right: margin }
+                        headStyles: { 
+                            fillColor: [0, 102, 204], 
+                            textColor: [255, 255, 255], 
+                            halign: 'center',
+                            valign: 'middle'
+                        },
+                        margin: { left: margin, right: margin },
+                        tableWidth: pageWidth - (margin * 2)
                     });
                     y = doc.lastAutoTable.finalY + 4;
 
+                    // Electrical Power Source section
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(12);
                     doc.text('Electrical Power Source', margin, y);
                     y += 2;
                     doc.line(margin, y, pageWidth - margin, y);
                     y += 4;
+
                     doc.autoTable({
                         startY: y,
                         head: [['Sr.No.', 'Source', 'Available', 'kVA', 'Enter Value', 'Note', 'Status']],
@@ -635,21 +639,25 @@
                             item.status || ''
                         ]),
                         theme: 'grid',
-                        styles: { fontSize: 7, cellPadding: 1.5, textColor: [0, 0, 0], halign: 'left' },
-                        headStyles: { fillColor: [0, 102, 204], textColor: [255, 255, 255], halign: 'center' },
-                        columnStyles: {
-                            0: { cellWidth: 15, halign: 'center' },
-                            1: { cellWidth: 50 },
-                            2: { cellWidth: 35 },
-                            3: { cellWidth: 35 },
-                            4: { cellWidth: 35 },
-                            5: { cellWidth: 35 },
-                            6: { cellWidth: 35 }
+                        styles: { 
+                            fontSize: 7, 
+                            cellPadding: 1.5, 
+                            textColor: [0, 0, 0], 
+                            halign: 'left',
+                            valign: 'middle'
                         },
-                        margin: { left: margin, right: margin }
+                        headStyles: { 
+                            fillColor: [0, 102, 204], 
+                            textColor: [255, 255, 255], 
+                            halign: 'center',
+                            valign: 'middle'
+                        },
+                        margin: { left: margin, right: margin },
+                        tableWidth: pageWidth - (margin * 2)
                     });
                     y = doc.lastAutoTable.finalY + 4;
 
+                    // Engineer Comments & Signature (Day 1)
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(12);
                     doc.text('Engineer Comments & Signature (Day 1)', margin, y);
@@ -658,14 +666,16 @@
                     y += 4;
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(8);
-                    const comments1 = doc.splitTextToSize(`Comments: ${formData.eventEngineerComments || ''}`, 277);
+
+                    const comments1 = doc.splitTextToSize(`Comments: ${formData.eventEngineerComments || ''}`, pageWidth - (margin * 2));
                     doc.text(comments1, margin, y);
-                    y += comments1.length * 4 + 4;
+                    y += comments1.length * lineHeight + 4;
                     doc.text(`Signature: ${formData.signature || ''}`, margin, y);
                     doc.text(`Date: ${formatDate(formData.signatureDate) || ''}`, margin + 140, y);
-                    y += 8;
+                    y += 10;
 
-                    if (formData.daySelection === '2' || formData.secondDate || formData.secondCheckingDone || formData.secondFeedTestLocation || formData.secondFeedTestTime || formData.secondEventDuration || formData.secondEventEngineerComments || formData.secondSignature || formData.secondSignatureDate) {
+                    // Second Day Details (if applicable)
+                    if (isSecondDayDetailsVisible) {
                         doc.setFont('helvetica', 'bold');
                         doc.setFontSize(12);
                         doc.text('Second Day Details', margin, y);
@@ -674,6 +684,7 @@
                         y += 4;
                         doc.setFont('helvetica', 'normal');
                         doc.setFontSize(8);
+
                         const secondDayDetails = [
                             { label: 'Date', value: formatDate(formData.secondDate) },
                             { label: 'Checking Done', value: formData.secondCheckingDone },
@@ -681,15 +692,17 @@
                             { label: 'Feed Test Time', value: formData.secondFeedTestTime },
                             { label: 'Event Duration', value: formData.secondEventDuration }
                         ];
+
                         secondDayDetails.forEach((item, index) => {
                             const col = index % 2 === 0 ? 0 : 140;
                             const row = Math.floor(index / 2);
-                            doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * 5);
+                            doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * lineHeight);
                         });
-                        y += Math.ceil(secondDayDetails.length / 2) * 5 + 4;
-                        const comments2 = doc.splitTextToSize(`Comments: ${formData.secondEventEngineerComments || ''}`, 277);
+                        y += Math.ceil(secondDayDetails.length / 2) * lineHeight + 4;
+
+                        const comments2 = doc.splitTextToSize(`Comments: ${formData.secondEventEngineerComments || ''}`, pageWidth - (margin * 2));
                         doc.text(comments2, margin, y);
-                        y += comments2.length * 4 + 4;
+                        y += comments2.length * lineHeight + 4;
                         doc.text(`Signature: ${formData.secondSignature || ''}`, margin, y);
                         doc.text(`Date: ${formatDate(formData.secondSignatureDate) || ''}`, margin + 140, y);
                     }
@@ -1511,7 +1524,7 @@
             );
         }
 
-         try {
+        try {
             const root = ReactDOM.createRoot(document.getElementById('root'));
             root.render(
                 <ErrorBoundary>
