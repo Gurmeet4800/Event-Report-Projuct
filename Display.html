@@ -993,21 +993,45 @@ async function exportToPDF() {
     const dateString = `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth()+1).toString().padStart(2, '0')}-${today.getFullYear()} ${today.getHours().toString().padStart(2, '0')}:${today.getMinutes().toString().padStart(2, '0')}`;
     const fileName = `Noida Studio Displays (Barco, Pixel LED & LED TVs) - ${dateString}.pdf`;
 
+    // Add Network18 logo to PDF with error handling
+    try {
+      const logoImg = new Image();
+      logoImg.crossOrigin = 'Anonymous';
+      logoImg.src = 'NW18.png';
+      
+      await new Promise((resolve, reject) => {
+        logoImg.onload = resolve;
+        logoImg.onerror = () => {
+          console.log('Logo image failed to load, continuing without it');
+          resolve();
+        };
+        setTimeout(resolve, 1000);
+      });
+
+      if (logoImg.complete && logoImg.naturalWidth !== 0) {
+        doc.addImage(logoImg, 'PNG', 10, 5, 30, 15);
+      }
+    } catch (imgError) {
+      console.error('Error loading logo:', imgError);
+    }
+
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('Noida Studio Displays (Barco, Pixel LED & LED TVs) Checklist', 250, 10, { align: 'center' });
+    doc.text('Noida Studio Displays (Barco, Pixel LED & LED TVs) Checklist', 250, 20, { align: 'center' });  // Changed from 10 to 20
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Network18 | ${dateString}`, 250, 15, { align: 'center' });
+    doc.text(`Network18 | ${dateString}`, 250, 25, { align: 'center' });  // Changed from 15 to 25
 
     const checkedBy = document.getElementById('checkedBy').value;
     if (checkedBy !== 'Select') {
       doc.setFontSize(12);
-      doc.text(`Checked by: ${checkedBy}`, 480, 15, { align: 'right' });
+      doc.text(`Checked by: ${checkedBy}`, 480, 20, { align: 'right' });  // Changed from 15 to 20
     }
 
-    let startY = 20;
+    // Move table down by 15 mm (original 20 mm + 15 mm = 35 mm)
+    let startY = 35;
+
     const table = document.getElementById('checklistTable');
     const headers = [];
     const columnIndices = [];
@@ -1053,7 +1077,6 @@ async function exportToPDF() {
       if (header === 'WME/NET') return 20;
       if (header === 'Convertor') return 20;
             
-                   
       const headerLength = header.length * 1.5;
       const maxDataLength = Math.max(...data.map(row => row[i] ? String(row[i]).length * 1.2 : 0));
       return Math.min(25, Math.max(15, Math.max(headerLength, maxDataLength)));
@@ -1126,13 +1149,13 @@ async function exportToPDF() {
           } else if (cellValue && cellValue.includes('Out of Service')) {
             data.cell.styles.textColor = [106, 90, 205];
           } else if (cellValue && cellValue.includes('Cube-A')) {
-            data.cell.styles.textColor = [210, 180, 140]; // SandyBrown
+            data.cell.styles.textColor = [210, 180, 140];
           } else if (cellValue && cellValue.includes('Cube-B')) {
-            data.cell.styles.textColor = [218, 165, 32]; // Goldenrod
+            data.cell.styles.textColor = [218, 165, 32];
           } else if (cellValue && cellValue.includes('Cube-C')) {
-            data.cell.styles.textColor = [184, 134, 11]; // DarkGoldenrod
+            data.cell.styles.textColor = [184, 134, 11];
           } else if (cellValue && cellValue.includes('Cube-D')) {
-            data.cell.styles.textColor = [205, 133, 63]; // Peru
+            data.cell.styles.textColor = [205, 133, 63];
           }
           
           if (headers[data.column.index] === 'Status') {
@@ -1170,16 +1193,16 @@ async function exportToPDF() {
               data.cell.styles.fillColor = [106, 90, 205];
               data.cell.styles.textColor = [255, 255, 255];
             } else if (cellValue && cellValue.includes('Cube-A')) {
-              data.cell.styles.fillColor = [210, 180, 140]; // SandyBrown
+              data.cell.styles.fillColor = [210, 180, 140];
               data.cell.styles.textColor = [255, 255, 255];
             } else if (cellValue && cellValue.includes('Cube-B')) {
-              data.cell.styles.fillColor = [218, 165, 32]; // Goldenrod
+              data.cell.styles.fillColor = [218, 165, 32];
               data.cell.styles.textColor = [255, 255, 255];
             } else if (cellValue && cellValue.includes('Cube-C')) {
-              data.cell.styles.fillColor = [184, 134, 11]; // DarkGoldenrod
+              data.cell.styles.fillColor = [184, 134, 11];
               data.cell.styles.textColor = [255, 255, 255];
             } else if (cellValue && cellValue.includes('Cube-D')) {
-              data.cell.styles.fillColor = [205, 133, 63]; // Peru
+              data.cell.styles.fillColor = [205, 133, 63];
               data.cell.styles.textColor = [255, 255, 255];
             }
           }
@@ -1410,4 +1433,3 @@ function showToast(message, type = 'success') {
 </script>
 </body>
 </html>
-      
