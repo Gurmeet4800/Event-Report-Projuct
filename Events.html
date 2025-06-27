@@ -374,9 +374,18 @@
             const loadImage = (url) => {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
-                    img.crossOrigin = 'Anonymous';
-                    img.onload = () => resolve(img);
-                    img.onerror = (e) => reject(new Error('Failed to load image: ' + e.message));
+                    // Only set crossOrigin if the image is from a different domain
+                    if (url.startsWith('http')) {
+                        img.crossOrigin = 'Anonymous';
+                    }
+                    img.onload = () => {
+                        console.log('Image loaded successfully:', url);
+                        resolve(img);
+                    };
+                    img.onerror = (e) => {
+                        console.error('Failed to load image:', url, e);
+                        reject(new Error(`Failed to load image at ${url}: ${e.message}`));
+                    };
                     img.src = url;
                 });
             };
@@ -400,55 +409,60 @@
                     const doc = new jsPDF({
                         orientation: 'portrait',
                         unit: 'mm',
-                        format: 'a2' // Changed from 'a3' to 'a2' for larger page size
+                        format: 'a2'
                     });
 
-                    const margin = 15; // Slightly increased margin
-                    let y = 20; // Increased initial y position
-                    const pageWidth = 420; // A2 width in mm (420mm × 594mm)
-                    const lineHeight = 6; // Slightly increased line height
+                    const margin = 15;
+                    let y = 20;
+                    const pageWidth = 420;
+                    const lineHeight = 6;
 
                     // Add logo
                     try {
-                        const imageUrl = './NW18.png';
+                        const imageUrl = './NW18.png'; // Ensure this path is correct or use a full URL
                         const img = await loadImage(imageUrl);
-                        const imgWidth = 60; // Slightly larger logo
+                        const imgWidth = 60;
                         const imgHeight = (img.height * imgWidth) / img.width;
                         doc.addImage(img, 'PNG', margin, y, imgWidth, imgHeight);
-                        y += imgHeight + 10; // More space after logo
+                        y += imgHeight + 10;
                     } catch (error) {
                         console.warn('Image loading failed:', error.message);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(12);
+                        doc.setTextColor(255, 0, 0);
+                        doc.text('Network18 Logo (Failed to load)', margin, y);
+                        y += 10;
                     }
 
                     // Header with timestamp
                     const { fileTimestamp, displayTimestamp } = getFormattedDateTime();
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(18); // Slightly larger font
+                    doc.setFontSize(18);
                     doc.setTextColor(0, 102, 204);
                     const headerText = `Network18 Event Report | ${displayTimestamp}`;
                     const headerWidth = doc.getTextWidth(headerText);
                     doc.text(headerText, (pageWidth - headerWidth) / 2, y);
-                    y += 12; // More space after header
+                    y += 12;
 
                     // Day and created by
-                    doc.setFontSize(14); // Slightly larger font
+                    doc.setFontSize(14);
                     if (formData.daySelection !== 'Select') {
                         doc.text(`Day: ${formData.daySelection}`, margin, y);
                     }
                     if (formData.createdBy) {
                         doc.text(`Created By: ${formData.createdBy}`, pageWidth - margin - 70, y);
                     }
-                    y += 12; // More space after this section
+                    y += 12;
 
                     // Event Details section
-                    doc.setFontSize(14); // Slightly larger font
+                    doc.setFontSize(14);
                     doc.setTextColor(0);
                     doc.text('Event Details', margin, y);
                     y += 3;
                     doc.line(margin, y, pageWidth - margin, y);
-                    y += 6; // More space after line
+                    y += 6;
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(10); // Slightly larger font
+                    doc.setFontSize(10);
 
                     const eventDetails = [
                         { label: 'Event Name', value: formData.eventName },
@@ -464,11 +478,11 @@
                     ];
 
                     eventDetails.forEach((item, index) => {
-                        const col = index % 2 === 0 ? 0 : 200; // Adjusted column positions
+                        const col = index % 2 === 0 ? 0 : 200;
                         const row = Math.floor(index / 2);
                         doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * lineHeight);
                     });
-                    y += Math.ceil(eventDetails.length / 2) * lineHeight + 8; // More space after section
+                    y += Math.ceil(eventDetails.length / 2) * lineHeight + 8;
 
                     // Team Details section
                     doc.setFont('helvetica', 'bold');
@@ -562,8 +576,8 @@
                         body: equipmentData,
                         theme: 'grid',
                         styles: { 
-                            fontSize: 8, // Slightly larger font
-                            cellPadding: 2, // More padding
+                            fontSize: 8,
+                            cellPadding: 2,
                             textColor: [0, 0, 0], 
                             halign: 'left',
                             valign: 'middle'
@@ -1502,7 +1516,7 @@
                                 ></textarea>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <input
-                                        type="text"
+                                       type="text"
                                         name="secondSignature"
                                         value={formData.secondSignature}
                                         onChange={handleInputChange}
