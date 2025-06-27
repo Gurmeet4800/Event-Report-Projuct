@@ -655,7 +655,7 @@ const config = {
       { name: 'News18 UP/UK LED TV', type: 'led', ledSize1: '75"', ledSize2: '55" x 2', ledTvInput: 'AUX 13', tvInput: 'AUX 9', hdmiInput: '', lvcInput: '', pixelInput: '', time: '09:00', status: 'OK', remarks: 'Working well' },
       { name: 'News18 Bihar 3x2 Barco', type: 'barco', barcoModel: 'LVD', cubeA: 'A1-To-A3', cubeB: 'B1-To-B3', ledTvInput: '', tvInput: '', hdmiInput: 'AUX 5', lvcInput: '', pixelInput: '', time: '09:00', status: 'OK', remarks: 'Working well' },
       { name: 'News18 Bihar LED TV', type: 'led', ledSize1: '85"', ledSize2: '', ledTvInput: 'AUX 6', tvInput: '', hdmiInput: '', lvcInput: '', pixelInput: '', time: '09:00', status: 'OK', remarks: 'Working well' },
-      { name: 'News18 MP 3x2 Barco', type: 'barco', barcoModel: 'LVD', cubeA: 'A1-To-A3', cubeB: 'B1-To-B3', ledTvInput: '', tvInput: '', hdmiInput: 'AUX 5', lvcInput: '', pixelInput: '', indemnify: '09:00', status: 'OK', remarks: 'Working well' },
+      { name: 'News18 MP 3x2 Barco', type: 'barco', barcoModel: 'LVD', cubeA: 'A1-To-A3', cubeB: 'B1-To-B3', ledTvInput: '', tvInput: '', hdmiInput: 'AUX 5', lvcInput: '', pixelInput: '', time: '09:00', status: 'OK', remarks: 'Working well' },
       { name: 'News18 MP LED TV', type: 'led', ledSize1: '85"', ledSize2: '', ledTvInput: 'AUX 6', tvInput: '', hdmiInput: '', lvcInput: '', pixelInput: '', time: '09:00', status: 'OK', remarks: 'Working well' },
       { name: 'News18 Rajasthan 3x2 Barco', type: 'barco', barcoModel: 'LVD', cubeA: 'A1-To-A3', cubeB: 'B1-To-B3', ledTvInput: '', tvInput: '', hdmiInput: 'AUX 5', lvcInput: '', pixelInput: '', time: '09:00', status: 'OK', remarks: 'Working well' },
       { name: 'News18 Rajasthan LED TV', type: 'led', ledSize1: '85"', ledSize2: '', ledTvInput: 'AUX 6', tvInput: '', hdmiInput: '', lvcInput: '', pixelInput: '', time: '09:00', status: 'OK', remarks: 'Working well' }
@@ -689,7 +689,7 @@ const config = {
   },
   options: {
     status: ['OK', 'Standby', 'FAULT', 'NOT WORKING', 'OFF', 'Under Maintenance', 'Needs Repair', 'Testing', 'Awaiting Parts', 'Calibrating', 'Out of Service', 'Cube-A', 'Cube-B', 'Cube-C', 'Cube-D'],
-    statusDropdown: ['OK', 'Standby', 'FAULT', 'NOT WORKING', 'OFF', ],
+    statusDropdown: ['OK', 'Standby', 'FAULT', 'NOT WORKING', 'OFF'],
     ledSize: ['85"', '75"', '65"', '55"', '55" x 2', '55"x3', '55"x 4', '55"x 6', '85"x 2'],
     barco: ['Unisee 700', 'Unisee 800', 'LVD', 'KVD'],
     controller: ['NovaStar VX400', 'NovaStar VX600', 'NovaStar H2', 'NovaStar VX1'],
@@ -1009,7 +1009,10 @@ async function exportToPDF() {
       });
 
       if (logoImg.complete && logoImg.naturalWidth !== 0) {
-        doc.addImage(logoImg, 'PNG', 10, 5, 30, 15);
+        const logoWidth = 30; // Fixed width in mm
+        const aspectRatio = logoImg.naturalHeight / logoImg.naturalWidth;
+        const logoHeight = logoWidth * aspectRatio; // Calculate height to maintain aspect ratio
+        doc.addImage(logoImg, 'PNG', 10, 5, logoWidth, logoHeight);
       }
     } catch (imgError) {
       console.error('Error loading logo:', imgError);
@@ -1017,19 +1020,18 @@ async function exportToPDF() {
 
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('Noida Studio Displays (Barco, Pixel LED & LED TVs) Checklist', 250, 20, { align: 'center' });  // Changed from 10 to 20
+    doc.text('Noida Studio Displays (Barco, Pixel LED & LED TVs) Checklist', 250, 20, { align: 'center' });
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Network18 | ${dateString}`, 250, 25, { align: 'center' });  // Changed from 15 to 25
+    doc.text(`Network18 | ${dateString}`, 250, 25, { align: 'center' });
 
     const checkedBy = document.getElementById('checkedBy').value;
     if (checkedBy !== 'Select') {
       doc.setFontSize(12);
-      doc.text(`Checked by: ${checkedBy}`, 480, 20, { align: 'right' });  // Changed from 15 to 20
+      doc.text(`Checked by: ${checkedBy}`, 480, 20, { align: 'right' });
     }
 
-    // Move table down by 15 mm (original 20 mm + 15 mm = 35 mm)
     let startY = 35;
 
     const table = document.getElementById('checklistTable');
