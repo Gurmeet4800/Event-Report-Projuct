@@ -108,6 +108,10 @@
                 jimmyJib: '',
                 broadcastType: '',
                 livePlatform: '',
+                setupDate: '',
+                setupStartTime: '',
+                setupEndTime: '',
+                checkingDone: '',
                 eventEngineer: [],
                 customEngineer: '',
                 showProducer: '',
@@ -116,8 +120,6 @@
                 electrical: '',
                 soundEngineer: '',
                 productionControl: '',
-                installationTime: '',
-                checkingDone: '',
                 feedTestLocation: '',
                 feedTestTime: '',
                 eventStartTime: '',
@@ -345,7 +347,7 @@
 
             const getFormattedDateTime = () => {
                 try {
-                    const now = new Date('2025-06-28T18:55:00+05:30'); // Set to 06:55 PM IST, June 28, 2025
+                    const now = new Date('2025-06-28T20:13:00+05:30');
                     const day = String(now.getDate()).padStart(2, '0');
                     const month = String(now.getMonth() + 1).padStart(2, '0');
                     const year = now.getFullYear();
@@ -419,7 +421,6 @@
 
                     const { fileTimestamp, displayTimestamp } = getFormattedDateTime();
 
-                    // Add logo with adjusted positioning
                     try {
                         const imageUrl = './NW18.png';
                         const img = await loadImage(imageUrl);
@@ -434,33 +435,28 @@
                         doc.text('Network18 Logo', margin, y);
                     }
 
-                    // Add header
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(18);
-                    doc.setTextColor(0, 102, 204); // Blue color for header
+                    doc.setTextColor(0, 102, 204);
                     const headerText = `Network18 Event Report | ${displayTimestamp}`;
                     const headerWidth = doc.getTextWidth(headerText);
                     const headerX = (pageWidth - headerWidth) / 2;
                     doc.text(headerText, headerX, y);
 
-                    // Increase y to avoid overlap with logo
                     y += 20;
 
-                    // Display Day Selection on the left with label in black and value in slight gray
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12); // Increased font size for label
+                    doc.setFontSize(12);
                     if (formData.daySelection !== 'Select') {
-                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.setTextColor(0, 0, 0);
                         doc.text('Day:', margin, y);
-                        doc.setFont('helvetica', 'bold'); // Bold for value
-                        doc.setFontSize(12); // Same size as label
-                        doc.setTextColor(100, 100, 100); // Slight gray for value
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(100, 100, 100);
                         doc.text(formData.daySelection, margin + doc.getTextWidth('Day: '), y);
-                        doc.setFont('helvetica', 'normal'); // Reset font
-                        doc.setTextColor(0, 0, 0); // Reset text color
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(0, 0, 0);
                     }
 
-                    // Display Created By on the right with label in black and value in slight gray
                     const rightText = [];
                     if (formData.createdBy) {
                         rightText.push(`Created By: ${formData.createdBy}`);
@@ -468,14 +464,13 @@
                     const rightTextCombined = rightText.join(' | ');
                     const rightTextWidth = doc.getTextWidth(rightTextCombined);
                     if (formData.createdBy) {
-                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.setTextColor(0, 0, 0);
                         doc.text('Created By:', pageWidth - margin - rightTextWidth, y);
-                        doc.setFont('helvetica', 'bold'); // Bold for value
-                        doc.setFontSize(12); // Same size as label
-                        doc.setTextColor(100, 100, 100); // Slight gray for value
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(100, 100, 100);
                         doc.text(formData.createdBy, pageWidth - margin - rightTextWidth + doc.getTextWidth('Created By: '), y);
-                        doc.setFont('helvetica', 'normal'); // Reset font
-                        doc.setTextColor(0, 0, 0); // Reset text color
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(0, 0, 0);
                     }
 
                     y += 15;
@@ -488,7 +483,7 @@
                     doc.line(margin, y, pageWidth - margin, y);
                     y += 6;
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12); // Increased font size for labels
+                    doc.setFontSize(12);
 
                     const eventDetails = [
                         { label: 'Event Name', value: formData.eventName },
@@ -509,18 +504,48 @@
                     eventDetails.forEach((item, index) => {
                         const col = index % 2 === 0 ? 0 : 200;
                         const row = Math.floor(index / 2);
-                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.setTextColor(0, 0, 0);
                         doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
                         if (item.value) {
-                            doc.setFont('helvetica', 'bold'); // Bold for value
-                            doc.setFontSize(12); // Same size as label
-                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(100, 100, 100);
                             doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
-                            doc.setFont('helvetica', 'normal'); // Reset font
-                            doc.setTextColor(0, 0, 0); // Reset text color
+                            doc.setFont('helvetica', 'normal');
+                            doc.setTextColor(0, 0, 0);
                         }
                     });
                     y += Math.ceil(eventDetails.length / 2) * lineHeight + 8;
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text('Setup Date and Timing', margin, y);
+                    y += 3;
+                    doc.line(margin, y, pageWidth - margin, y);
+                    y += 6;
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(12);
+
+                    const setupTimingDetails = [
+                        { label: 'Setup Date', value: formatDate(formData.setupDate) },
+                        { label: 'Setup Start Time', value: formData.setupStartTime },
+                        { label: 'Setup End Time', value: formData.setupEndTime },
+                        { label: 'Checking Done', value: formData.checkingDone }
+                    ];
+
+                    setupTimingDetails.forEach((item, index) => {
+                        const col = index % 2 === 0 ? 0 : 200;
+                        const row = Math.floor(index / 2);
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
+                        if (item.value) {
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(100, 100, 100);
+                            doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
+                            doc.setFont('helvetica', 'normal');
+                            doc.setTextColor(0, 0, 0);
+                        }
+                    });
+                    y += Math.ceil(setupTimingDetails.length / 2) * lineHeight + 8;
 
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(14);
@@ -529,7 +554,7 @@
                     doc.line(margin, y, pageWidth - margin, y);
                     y += 6;
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12); // Increased font size for labels
+                    doc.setFontSize(12);
 
                     const teamDetails = [
                         { label: 'Event Engineer', value: formData.eventEngineer.join(', ') || '' },
@@ -544,15 +569,14 @@
                     teamDetails.forEach((item, index) => {
                         const col = index % 2 === 0 ? 0 : 200;
                         const row = Math.floor(index / 2);
-                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.setTextColor(0, 0, 0);
                         doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
                         if (item.value) {
-                            doc.setFont('helvetica', 'bold'); // Bold for value
-                            doc.setFontSize(12); // Same size as label
-                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(100, 100, 100);
                             doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
-                            doc.setFont('helvetica', 'normal'); // Reset font
-                            doc.setTextColor(0, 0, 0); // Reset text color
+                            doc.setFont('helvetica', 'normal');
+                            doc.setTextColor(0, 0, 0);
                         }
                     });
                     y += Math.ceil(teamDetails.length / 2) * lineHeight + 8;
@@ -564,11 +588,9 @@
                     doc.line(margin, y, pageWidth - margin, y);
                     y += 6;
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12); // Increased font size for labels
+                    doc.setFontSize(12);
 
                     const eventTiming = [
-                        { label: 'Installation Time', value: formData.installationTime },
-                        { label: 'Checking Done', value: formData.checkingDone },
                         { label: 'Feed Test Location', value: formData.feedTestLocation },
                         { label: 'Feed Test Time', value: formData.feedTestTime },
                         { label: 'Event Start Time', value: formData.eventStartTime },
@@ -579,21 +601,20 @@
                     eventTiming.forEach((item, index) => {
                         const col = index % 2 === 0 ? 0 : 200;
                         const row = Math.floor(index / 2);
-                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.setTextColor(0, 0, 0);
                         doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
                         if (item.value) {
-                            doc.setFont('helvetica', 'bold'); // Bold for value
-                            doc.setFontSize(12); // Same size as label
-                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(100, 100, 100);
                             doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
-                            doc.setFont('helvetica', 'normal'); // Reset font
-                            doc.setTextColor(0, 0, 0); // Reset text color
+                            doc.setFont('helvetica', 'normal');
+                            doc.setTextColor(0, 0, 0);
                         }
                     });
                     y += Math.ceil(eventTiming.length / 2) * lineHeight + 8;
 
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(16); // Increased and bold for section header
+                    doc.setFontSize(16);
                     doc.text('Equipment', margin, y);
                     y += 3;
                     doc.line(margin, y, pageWidth - margin, y);
@@ -629,16 +650,16 @@
                         body: equipmentData,
                         theme: 'grid',
                         styles: { 
-                            fontSize: 10, // Increased font size for table content
+                            fontSize: 10,
                             cellPadding: 2,
-                            textColor: [0, 0, 0], 
+                            textColor: [0, 0, 0],
                             halign: 'left',
                             valign: 'middle',
-                            fontStyle: 'bold' // Bold for all table content
+                            fontStyle: 'bold'
                         },
                         headStyles: { 
-                            fillColor: [0, 102, 204], 
-                            textColor: [255, 255, 255], 
+                            fillColor: [0, 102, 204],
+                            textColor: [255, 255, 255],
                             halign: 'center',
                             valign: 'middle'
                         },
@@ -648,7 +669,7 @@
                     y = doc.lastAutoTable.finalY + 6;
 
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(16); // Increased and bold for section header
+                    doc.setFontSize(16);
                     doc.text('Live Source', margin, y);
                     y += 3;
                     doc.line(margin, y, pageWidth - margin, y);
@@ -668,16 +689,16 @@
                         ]),
                         theme: 'grid',
                         styles: { 
-                            fontSize: 10, // Increased font size for table content
+                            fontSize: 10,
                             cellPadding: 2,
-                            textColor: [0, 0, 0], 
+                            textColor: [0, 0, 0],
                             halign: 'left',
                             valign: 'middle',
-                            fontStyle: 'bold' // Bold for all table content
+                            fontStyle: 'bold'
                         },
                         headStyles: { 
-                            fillColor: [0, 102, 204], 
-                            textColor: [255, 255, 255], 
+                            fillColor: [0, 102, 204],
+                            textColor: [255, 255, 255],
                             halign: 'center',
                             valign: 'middle'
                         },
@@ -687,7 +708,7 @@
                     y = doc.lastAutoTable.finalY + 6;
 
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(16); // Increased and bold for section header
+                    doc.setFontSize(16);
                     doc.text('Electrical Power Source', margin, y);
                     y += 3;
                     doc.line(margin, y, pageWidth - margin, y);
@@ -707,16 +728,16 @@
                         ]),
                         theme: 'grid',
                         styles: { 
-                            fontSize: 10, // Increased font size for table content
+                            fontSize: 10,
                             cellPadding: 2,
-                            textColor: [0, 0, 0], 
+                            textColor: [0, 0, 0],
                             halign: 'left',
                             valign: 'middle',
-                            fontStyle: 'bold' // Bold for all table content
+                            fontStyle: 'bold'
                         },
                         headStyles: { 
-                            fillColor: [0, 102, 204], 
-                            textColor: [255, 255, 255], 
+                            fillColor: [0, 102, 204],
+                            textColor: [255, 255, 255],
                             halign: 'center',
                             valign: 'middle'
                         },
@@ -732,40 +753,37 @@
                     doc.line(margin, y, pageWidth - margin, y);
                     y += 6;
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12); // Increased font size for labels
+                    doc.setFontSize(12);
 
                     const comments1 = doc.splitTextToSize(`Comments: ${formData.eventEngineerComments || ''}`, pageWidth - (margin * 2));
-                    doc.setTextColor(0, 0, 0); // Black for label
+                    doc.setTextColor(0, 0, 0);
                     doc.text('Comments:', margin, y);
                     if (formData.eventEngineerComments) {
-                        doc.setFont('helvetica', 'bold'); // Bold for value
-                        doc.setFontSize(12); // Same size as label
-                        doc.setTextColor(100, 100, 100); // Slight gray for value
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(100, 100, 100);
                         doc.text(formData.eventEngineerComments, margin + doc.getTextWidth('Comments: '), y);
-                        doc.setFont('helvetica', 'normal'); // Reset font
-                        doc.setTextColor(0, 0, 0); // Reset text color
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(0, 0, 0);
                     }
                     y += comments1.length * lineHeight + 6;
 
-                    doc.setTextColor(0, 0, 0); // Black for label
+                    doc.setTextColor(0, 0, 0);
                     doc.text('Signature:', margin, y);
                     if (formData.signature) {
-                        doc.setFont('helvetica', 'bold'); // Bold for value
-                        doc.setFontSize(12); // Same size as label
-                        doc.setTextColor(100, 100, 100); // Slight gray for value
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(100, 100, 100);
                         doc.text(formData.signature, margin + doc.getTextWidth('Signature: '), y);
-                        doc.setFont('helvetica', 'normal'); // Reset font
-                        doc.setTextColor(0, 0, 0); // Reset text color
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(0, 0, 0);
                     }
 
                     doc.text('Date:', margin + 200, y);
                     if (formData.signatureDate) {
-                        doc.setFont('helvetica', 'bold'); // Bold for value
-                        doc.setFontSize(12); // Same size as label
-                        doc.setTextColor(100, 100, 100); // Slight gray for value
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(100, 100, 100);
                         doc.text(formatDate(formData.signatureDate), margin + 200 + doc.getTextWidth('Date: '), y);
-                        doc.setFont('helvetica', 'normal'); // Reset font
-                        doc.setTextColor(0, 0, 0); // Reset text color
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(0, 0, 0);
                     }
                     y += 12;
 
@@ -777,7 +795,7 @@
                         doc.line(margin, y, pageWidth - margin, y);
                         y += 6;
                         doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(12); // Increased font size for labels
+                        doc.setFontSize(12);
 
                         const secondDayDetails = [
                             { label: 'Date', value: formatDate(formData.secondDate) },
@@ -790,51 +808,47 @@
                         secondDayDetails.forEach((item, index) => {
                             const col = index % 2 === 0 ? 0 : 200;
                             const row = Math.floor(index / 2);
-                            doc.setTextColor(0, 0, 0); // Black for label
+                            doc.setTextColor(0, 0, 0);
                             doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
                             if (item.value) {
-                                doc.setFont('helvetica', 'bold'); // Bold for value
-                                doc.setFontSize(12); // Same size as label
-                                doc.setTextColor(100, 100, 100); // Slight gray for value
+                                doc.setFont('helvetica', 'bold');
+                                doc.setTextColor(100, 100, 100);
                                 doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
-                                doc.setFont('helvetica', 'normal'); // Reset font
-                                doc.setTextColor(0, 0, 0); // Reset text color
+                                doc.setFont('helvetica', 'normal');
+                                doc.setTextColor(0, 0, 0);
                             }
                         });
                         y += Math.ceil(secondDayDetails.length / 2) * lineHeight + 6;
 
                         const comments2 = doc.splitTextToSize(`Comments: ${formData.secondEventEngineerComments || ''}`, pageWidth - (margin * 2));
-                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.setTextColor(0, 0, 0);
                         doc.text('Comments:', margin, y);
                         if (formData.secondEventEngineerComments) {
-                            doc.setFont('helvetica', 'bold'); // Bold for value
-                            doc.setFontSize(12); // Same size as label
-                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(100, 100, 100);
                             doc.text(formData.secondEventEngineerComments, margin + doc.getTextWidth('Comments: '), y);
-                            doc.setFont('helvetica', 'normal'); // Reset font
-                            doc.setTextColor(0, 0, 0); // Reset text color
+                            doc.setFont('helvetica', 'normal');
+                            doc.setTextColor(0, 0, 0);
                         }
                         y += comments2.length * lineHeight + 6;
 
-                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.setTextColor(0, 0, 0);
                         doc.text('Signature:', margin, y);
                         if (formData.secondSignature) {
-                            doc.setFont('helvetica', 'bold'); // Bold for value
-                            doc.setFontSize(12); // Same size as label
-                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(100, 100, 100);
                             doc.text(formData.secondSignature, margin + doc.getTextWidth('Signature: '), y);
-                            doc.setFont('helvetica', 'normal'); // Reset font
-                            doc.setTextColor(0, 0, 0); // Reset text color
+                            doc.setFont('helvetica', 'normal');
+                            doc.setTextColor(0, 0, 0);
                         }
 
                         doc.text('Date:', margin + 200, y);
                         if (formData.secondSignatureDate) {
-                            doc.setFont('helvetica', 'bold'); // Bold for value
-                            doc.setFontSize(12); // Same size as label
-                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(100, 100, 100);
                             doc.text(formatDate(formData.secondSignatureDate), margin + 200 + doc.getTextWidth('Date: '), y);
-                            doc.setFont('helvetica', 'normal'); // Reset font
-                            doc.setTextColor(0, 0, 0); // Reset text color
+                            doc.setFont('helvetica', 'normal');
+                            doc.setTextColor(0, 0, 0);
                         }
                     }
 
@@ -848,7 +862,6 @@
 
             const generateExcel = async () => {
                 try {
-                    // Check if XLSX is loaded, if not load it
                     if (!window.XLSX) {
                         await loadXLSX();
                     }
@@ -872,7 +885,7 @@
                     const equipmentHeaders = hasHiredEquipment
                         ? ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Hired', 'Vendor Name', 'Remarks', 'Status']
                         : ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Remarks', 'Status'];
-                    
+
                     const equipmentData = formData.equipment.map((item, index) => {
                         const baseRow = [
                             index + 1,
@@ -907,6 +920,12 @@
                         ['Broadcast Type', formData.broadcastType],
                         ['Live Platform', formData.broadcastType === 'Live' ? formData.livePlatform : 'N/A'],
                         [],
+                        ['Setup Date and Timing'],
+                        ['Setup Date', formData.setupDate ? formatDate(formData.setupDate) : ''],
+                        ['Setup Start Time', formData.setupStartTime],
+                        ['Setup End Time', formData.setupEndTime],
+                        ['Checking Done', formData.checkingDone],
+                        [],
                         ['Team Details'],
                         ['Event Engineer', formData.eventEngineer.join(', ') || null],
                         ['Show Producer', formData.showProducer],
@@ -917,8 +936,6 @@
                         ['Production Control', formData.productionControl],
                         [],
                         ['Event Timing'],
-                        ['Installation Time', formData.installationTime],
-                        ['Checking Done', formData.checkingDone],
                         ['Feed Test Location', formData.feedTestLocation],
                         ['Feed Test Time', formData.feedTestTime],
                         ['Event Start Time', formData.eventStartTime],
@@ -1211,6 +1228,51 @@
                             </div>
                         </div>
                         <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
+                            <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Setup Date and Timing</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="setupDate" className="block text-sm font-medium text-gray-700 mb-1">Setup Date</label>
+                                    <input
+                                        type="date"
+                                        name="setupDate"
+                                        value={formData.setupDate}
+                                        onChange={handleInputChange}
+                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="setupStartTime" className="block text-sm font-medium text-gray-700 mb-1">Setup Start Time</label>
+                                    <input
+                                        type="time"
+                                        name="setupStartTime"
+                                        value={formData.setupStartTime}
+                                        onChange={handleInputChange}
+                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="setupEndTime" className="block text-sm font-medium text-gray-700 mb-1">Setup End Time</label>
+                                    <input
+                                        type="time"
+                                        name="setupEndTime"
+                                        value={formData.setupEndTime}
+                                        onChange={handleInputChange}
+                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="checkingDone" className="block text-sm font-medium text-gray-700 mb-1">Checking Done</label>
+                                    <input
+                                        type="time"
+                                        name="checkingDone"
+                                        value={formData.checkingDone}
+                                        onChange={handleInputChange}
+                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
                             <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Team Details</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -1248,26 +1310,6 @@
                         <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
                             <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Event Timing</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label htmlFor="installationTime" className="block text-sm font-medium text-gray-700 mb-1">Installation Time</label>
-                                    <input
-                                        type="time"
-                                        name="installationTime"
-                                        value={formData.installationTime}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="checkingDone" className="block text-sm font-medium text-gray-700 mb-1">Checking Done</label>
-                                    <input
-                                        type="time"
-                                        name="checkingDone"
-                                        value={formData.checkingDone}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                </div>
                                 <div>
                                     <label htmlFor="feedTestLocation" className="block text-sm font-medium text-gray-700 mb-1">Feed Test Location</label>
                                     <input
@@ -1456,7 +1498,7 @@
                                                         onChange={(e) => handleLiveSourceInput(index, 'available', e.target.value)}
                                                         className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
                                                     >
-                                                      <option value="Select">Select</option>
+                                                        <option value="Select">Select</option>
                                                         <option value="Yes">Yes</option>
                                                         <option value="No">No</option>
                                                     </select>
@@ -1478,7 +1520,7 @@
                                                             onChange={(e) => handleLiveSourceInput(index, 'unit', e.target.value)}
                                                             className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
                                                         >
-                                                            <option value="Mbps">Mbps</option>
+                                                             <option value="Mbps">Mbps</option>
                                                             <option value="Gbps">Gbps</option>
                                                         </select>
                                                     )}
