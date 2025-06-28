@@ -16,8 +16,8 @@
     <!-- jsPDF and autoTable -->
     <script src="https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
-    <!-- SheetJS -->
-    <script src="https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js"></script>
+    <!-- SheetJS (Updated CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.21.0/dist/xlsx.full.min.js"></script>
     <style>
         .glass-effect {
             background: rgba(255, 255, 255, 0.1);
@@ -67,7 +67,7 @@
                     csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
                     return csv;
                 } catch (e) {
-                    console.error(e);
+                    console.error('Error in loadFileData:', e);
                     return "";
                 }
             }
@@ -374,7 +374,6 @@
             const loadImage = (url) => {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
-                    // Only set crossOrigin if the image is from a different domain
                     if (url.startsWith('http')) {
                         img.crossOrigin = 'Anonymous';
                     }
@@ -417,44 +416,47 @@
                     const pageWidth = 420;
                     const lineHeight = 6;
 
-                    // Add logo
+                    const { fileTimestamp, displayTimestamp } = getFormattedDateTime();
+
                     try {
-                        const imageUrl = './NW18.png'; // Ensure this path is correct or use a full URL
+                        const imageUrl = './NW18.png';
                         const img = await loadImage(imageUrl);
-                        const imgWidth = 60;
+                        const imgWidth = 40;
                         const imgHeight = (img.height * imgWidth) / img.width;
-                        doc.addImage(img, 'PNG', margin, y, imgWidth, imgHeight);
-                        y += imgHeight + 10;
+                        doc.addImage(img, 'PNG', margin, y - 10, imgWidth, imgHeight);
                     } catch (error) {
                         console.warn('Image loading failed:', error.message);
                         doc.setFont('helvetica', 'normal');
                         doc.setFontSize(12);
                         doc.setTextColor(255, 0, 0);
-                        doc.text('Network18 Logo (Failed to load)', margin, y);
-                        y += 10;
+                        doc.text('Network18 Logo', margin, y);
                     }
 
-                    // Header with timestamp
-                    const { fileTimestamp, displayTimestamp } = getFormattedDateTime();
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(18);
                     doc.setTextColor(0, 102, 204);
                     const headerText = `Network18 Event Report | ${displayTimestamp}`;
                     const headerWidth = doc.getTextWidth(headerText);
-                    doc.text(headerText, (pageWidth - headerWidth) / 2, y);
-                    y += 12;
+                    const headerX = (pageWidth - headerWidth) / 2;
+                    doc.text(headerText, headerX, y);
 
-                    // Day and created by
+                    doc.setFont('helvetica', 'normal');
                     doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    const rightText = [];
                     if (formData.daySelection !== 'Select') {
-                        doc.text(`Day: ${formData.daySelection}`, margin, y);
+                        rightText.push(`Day: ${formData.daySelection}`);
                     }
                     if (formData.createdBy) {
-                        doc.text(`Created By: ${formData.createdBy}`, pageWidth - margin - 70, y);
+                        rightText.push(`Created By: ${formData.createdBy}`);
                     }
-                    y += 12;
+                    const rightTextCombined = rightText.join(' | ');
+                    const rightTextWidth = doc.getTextWidth(rightTextCombined);
+                    doc.text(rightTextCombined, pageWidth - margin - rightTextWidth, y);
 
-                    // Event Details section
+                    y += 15;
+
+                    doc.setFont('helvetica', 'bold');
                     doc.setFontSize(14);
                     doc.setTextColor(0);
                     doc.text('Event Details', margin, y);
@@ -484,7 +486,6 @@
                     });
                     y += Math.ceil(eventDetails.length / 2) * lineHeight + 8;
 
-                    // Team Details section
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(14);
                     doc.text('Team Details', margin, y);
@@ -511,7 +512,6 @@
                     });
                     y += Math.ceil(teamDetails.length / 2) * lineHeight + 8;
 
-                    // Event Timing section
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(14);
                     doc.text('Event Timing', margin, y);
@@ -538,7 +538,6 @@
                     });
                     y += Math.ceil(eventTiming.length / 2) * lineHeight + 8;
 
-                    // Equipment section
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(14);
                     doc.text('Equipment', margin, y);
@@ -593,7 +592,6 @@
                     });
                     y = doc.lastAutoTable.finalY + 6;
 
-                    // Live Source section
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(14);
                     doc.text('Live Source', margin, y);
@@ -632,7 +630,6 @@
                     });
                     y = doc.lastAutoTable.finalY + 6;
 
-                    // Electrical Power Source section
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(14);
                     doc.text('Electrical Power Source', margin, y);
@@ -671,7 +668,6 @@
                     });
                     y = doc.lastAutoTable.finalY + 6;
 
-                    // Engineer Comments & Signature (Day 1)
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(14);
                     doc.text('Engineer Comments & Signature (Day 1)', margin, y);
@@ -688,7 +684,6 @@
                     doc.text(`Date: ${formatDate(formData.signatureDate) || ''}`, margin + 200, y);
                     y += 12;
 
-                    // Second Day Details (if applicable)
                     if (isSecondDayDetailsVisible) {
                         doc.setFont('helvetica', 'bold');
                         doc.setFontSize(14);
@@ -739,9 +734,14 @@
                         alert('Please select at least one Event Engineer.');
                         return;
                     }
-                    if (!window.XLSX) {
-                        alert('Excel library failed to load. Please check your internet connection and try again.');
-                        throw new Error('SheetJS not loaded. Check CDN or network connectivity.');
+                    if (!window.XLSX || !window.XLSX.utils) {
+                        console.error('SheetJS library failed to load. Details:', {
+                            XLSX: window.XLSX,
+                            scriptSrc: 'https://cdn.jsdelivr.net/npm/xlsx@0.21.0/dist/xlsx.full.min.js',
+                            networkStatus: navigator.onLine ? 'Online' : 'Offline'
+                        });
+                        alert('Excel library failed to load. Please check your internet connection, disable any ad-blockers, or try again later.');
+                        return;
                     }
                     console.log('Starting Excel generation...', formData);
                     const wb = XLSX.utils.book_new();
@@ -772,7 +772,7 @@
                         ['Day Selection', formData.daySelection !== 'Select' ? formData.daySelection : null],
                         ['Created By', formData.createdBy || null],
                         ['Event Name', formData.eventName],
-                        ['Date', formatDate(formData.date)],
+                        ['Date', formData.date ? formatDate(formData.date) : ''],
                         ['Channel', formData.channel],
                         ['Location/Hotel Name', formData.location],
                         ['State/City', formData.city],
@@ -831,20 +831,20 @@
                         ['Engineer Comments & Signature (Day 1)'],
                         ['Comments', formData.eventEngineerComments],
                         ['Signature', formData.signature],
-                        ['Date', formData.signatureDate]
+                        ['Date', formData.signatureDate ? formatDate(formData.signatureDate) : '']
                     ];
                     if (formData.daySelection === '2' || formData.secondDate || formData.secondCheckingDone || formData.secondFeedTestLocation || formData.secondFeedTestTime || formData.secondEventDuration || formData.secondEventEngineerComments || formData.secondSignature || formData.secondSignatureDate) {
                         wsData.push(
                             [],
                             ['Second Day Details'],
-                            ['Date', formData.secondDate],
+                            ['Date', formData.secondDate ? formatDate(formData.secondDate) : ''],
                             ['Checking Done', formData.secondCheckingDone],
                             ['Feed Test Location', formData.secondFeedTestLocation],
                             ['Feed Test Time', formData.secondFeedTestTime],
                             ['Event Duration', formData.secondEventDuration],
                             ['Comments', formData.secondEventEngineerComments],
                             ['Signature', formData.secondSignature],
-                            ['Date', formData.secondSignatureDate]
+                            ['Date', formData.secondSignatureDate ? formatDate(formData.secondSignatureDate) : '']
                         );
                     }
                     console.log('wsData:', wsData);
