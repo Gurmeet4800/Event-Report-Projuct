@@ -104,7 +104,8 @@
                 city: '',
                 setupType: [],
                 showType: '',
-                showSetup: '',
+                camera: '',
+                jimmyJib: '',
                 broadcastType: '',
                 livePlatform: '',
                 eventEngineer: [],
@@ -344,7 +345,7 @@
 
             const getFormattedDateTime = () => {
                 try {
-                    const now = new Date();
+                    const now = new Date('2025-06-28T18:55:00+05:30'); // Set to 06:55 PM IST, June 28, 2025
                     const day = String(now.getDate()).padStart(2, '0');
                     const month = String(now.getMonth() + 1).padStart(2, '0');
                     const year = now.getFullYear();
@@ -418,6 +419,7 @@
 
                     const { fileTimestamp, displayTimestamp } = getFormattedDateTime();
 
+                    // Add logo with adjusted positioning
                     try {
                         const imageUrl = './NW18.png';
                         const img = await loadImage(imageUrl);
@@ -432,27 +434,49 @@
                         doc.text('Network18 Logo', margin, y);
                     }
 
+                    // Add header
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(18);
-                    doc.setTextColor(0, 102, 204);
+                    doc.setTextColor(0, 102, 204); // Blue color for header
                     const headerText = `Network18 Event Report | ${displayTimestamp}`;
                     const headerWidth = doc.getTextWidth(headerText);
                     const headerX = (pageWidth - headerWidth) / 2;
                     doc.text(headerText, headerX, y);
 
+                    // Increase y to avoid overlap with logo
+                    y += 20;
+
+                    // Display Day Selection on the left with label in black and value in slight gray
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(14);
-                    doc.setTextColor(0, 0, 0);
-                    const rightText = [];
+                    doc.setFontSize(12); // Increased font size for label
                     if (formData.daySelection !== 'Select') {
-                        rightText.push(`Day: ${formData.daySelection}`);
+                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.text('Day:', margin, y);
+                        doc.setFont('helvetica', 'bold'); // Bold for value
+                        doc.setFontSize(12); // Same size as label
+                        doc.setTextColor(100, 100, 100); // Slight gray for value
+                        doc.text(formData.daySelection, margin + doc.getTextWidth('Day: '), y);
+                        doc.setFont('helvetica', 'normal'); // Reset font
+                        doc.setTextColor(0, 0, 0); // Reset text color
                     }
+
+                    // Display Created By on the right with label in black and value in slight gray
+                    const rightText = [];
                     if (formData.createdBy) {
                         rightText.push(`Created By: ${formData.createdBy}`);
                     }
                     const rightTextCombined = rightText.join(' | ');
                     const rightTextWidth = doc.getTextWidth(rightTextCombined);
-                    doc.text(rightTextCombined, pageWidth - margin - rightTextWidth, y);
+                    if (formData.createdBy) {
+                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.text('Created By:', pageWidth - margin - rightTextWidth, y);
+                        doc.setFont('helvetica', 'bold'); // Bold for value
+                        doc.setFontSize(12); // Same size as label
+                        doc.setTextColor(100, 100, 100); // Slight gray for value
+                        doc.text(formData.createdBy, pageWidth - margin - rightTextWidth + doc.getTextWidth('Created By: '), y);
+                        doc.setFont('helvetica', 'normal'); // Reset font
+                        doc.setTextColor(0, 0, 0); // Reset text color
+                    }
 
                     y += 15;
 
@@ -464,7 +488,7 @@
                     doc.line(margin, y, pageWidth - margin, y);
                     y += 6;
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(10);
+                    doc.setFontSize(12); // Increased font size for labels
 
                     const eventDetails = [
                         { label: 'Event Name', value: formData.eventName },
@@ -474,7 +498,10 @@
                         { label: 'State/City', value: formData.city },
                         { label: 'Setup Type', value: formData.setupType.join(', ') || '' },
                         { label: 'Show Type', value: formData.showType },
-                        { label: 'Show Setup', value: formData.showSetup },
+                        { 
+                            label: 'Show Setup', 
+                            value: `Camera: ${formData.camera || ''} | Jimmy Jib: ${formData.jimmyJib || ''}` 
+                        },
                         { label: 'Broadcast Type', value: formData.broadcastType },
                         ...(formData.broadcastType === 'Live' ? [{ label: 'Live Platform', value: formData.livePlatform }] : [])
                     ];
@@ -482,7 +509,16 @@
                     eventDetails.forEach((item, index) => {
                         const col = index % 2 === 0 ? 0 : 200;
                         const row = Math.floor(index / 2);
-                        doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * lineHeight);
+                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
+                        if (item.value) {
+                            doc.setFont('helvetica', 'bold'); // Bold for value
+                            doc.setFontSize(12); // Same size as label
+                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
+                            doc.setFont('helvetica', 'normal'); // Reset font
+                            doc.setTextColor(0, 0, 0); // Reset text color
+                        }
                     });
                     y += Math.ceil(eventDetails.length / 2) * lineHeight + 8;
 
@@ -493,7 +529,7 @@
                     doc.line(margin, y, pageWidth - margin, y);
                     y += 6;
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(10);
+                    doc.setFontSize(12); // Increased font size for labels
 
                     const teamDetails = [
                         { label: 'Event Engineer', value: formData.eventEngineer.join(', ') || '' },
@@ -508,7 +544,16 @@
                     teamDetails.forEach((item, index) => {
                         const col = index % 2 === 0 ? 0 : 200;
                         const row = Math.floor(index / 2);
-                        doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * lineHeight);
+                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
+                        if (item.value) {
+                            doc.setFont('helvetica', 'bold'); // Bold for value
+                            doc.setFontSize(12); // Same size as label
+                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
+                            doc.setFont('helvetica', 'normal'); // Reset font
+                            doc.setTextColor(0, 0, 0); // Reset text color
+                        }
                     });
                     y += Math.ceil(teamDetails.length / 2) * lineHeight + 8;
 
@@ -519,7 +564,7 @@
                     doc.line(margin, y, pageWidth - margin, y);
                     y += 6;
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(10);
+                    doc.setFontSize(12); // Increased font size for labels
 
                     const eventTiming = [
                         { label: 'Installation Time', value: formData.installationTime },
@@ -534,12 +579,21 @@
                     eventTiming.forEach((item, index) => {
                         const col = index % 2 === 0 ? 0 : 200;
                         const row = Math.floor(index / 2);
-                        doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * lineHeight);
+                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
+                        if (item.value) {
+                            doc.setFont('helvetica', 'bold'); // Bold for value
+                            doc.setFontSize(12); // Same size as label
+                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
+                            doc.setFont('helvetica', 'normal'); // Reset font
+                            doc.setTextColor(0, 0, 0); // Reset text color
+                        }
                     });
                     y += Math.ceil(eventTiming.length / 2) * lineHeight + 8;
 
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
+                    doc.setFontSize(16); // Increased and bold for section header
                     doc.text('Equipment', margin, y);
                     y += 3;
                     doc.line(margin, y, pageWidth - margin, y);
@@ -575,11 +629,12 @@
                         body: equipmentData,
                         theme: 'grid',
                         styles: { 
-                            fontSize: 8,
+                            fontSize: 10, // Increased font size for table content
                             cellPadding: 2,
                             textColor: [0, 0, 0], 
                             halign: 'left',
-                            valign: 'middle'
+                            valign: 'middle',
+                            fontStyle: 'bold' // Bold for all table content
                         },
                         headStyles: { 
                             fillColor: [0, 102, 204], 
@@ -593,7 +648,7 @@
                     y = doc.lastAutoTable.finalY + 6;
 
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
+                    doc.setFontSize(16); // Increased and bold for section header
                     doc.text('Live Source', margin, y);
                     y += 3;
                     doc.line(margin, y, pageWidth - margin, y);
@@ -613,11 +668,12 @@
                         ]),
                         theme: 'grid',
                         styles: { 
-                            fontSize: 8, 
-                            cellPadding: 2, 
+                            fontSize: 10, // Increased font size for table content
+                            cellPadding: 2,
                             textColor: [0, 0, 0], 
                             halign: 'left',
-                            valign: 'middle'
+                            valign: 'middle',
+                            fontStyle: 'bold' // Bold for all table content
                         },
                         headStyles: { 
                             fillColor: [0, 102, 204], 
@@ -631,7 +687,7 @@
                     y = doc.lastAutoTable.finalY + 6;
 
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
+                    doc.setFontSize(16); // Increased and bold for section header
                     doc.text('Electrical Power Source', margin, y);
                     y += 3;
                     doc.line(margin, y, pageWidth - margin, y);
@@ -651,11 +707,12 @@
                         ]),
                         theme: 'grid',
                         styles: { 
-                            fontSize: 8, 
-                            cellPadding: 2, 
+                            fontSize: 10, // Increased font size for table content
+                            cellPadding: 2,
                             textColor: [0, 0, 0], 
                             halign: 'left',
-                            valign: 'middle'
+                            valign: 'middle',
+                            fontStyle: 'bold' // Bold for all table content
                         },
                         headStyles: { 
                             fillColor: [0, 102, 204], 
@@ -675,13 +732,41 @@
                     doc.line(margin, y, pageWidth - margin, y);
                     y += 6;
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(10);
+                    doc.setFontSize(12); // Increased font size for labels
 
                     const comments1 = doc.splitTextToSize(`Comments: ${formData.eventEngineerComments || ''}`, pageWidth - (margin * 2));
-                    doc.text(comments1, margin, y);
+                    doc.setTextColor(0, 0, 0); // Black for label
+                    doc.text('Comments:', margin, y);
+                    if (formData.eventEngineerComments) {
+                        doc.setFont('helvetica', 'bold'); // Bold for value
+                        doc.setFontSize(12); // Same size as label
+                        doc.setTextColor(100, 100, 100); // Slight gray for value
+                        doc.text(formData.eventEngineerComments, margin + doc.getTextWidth('Comments: '), y);
+                        doc.setFont('helvetica', 'normal'); // Reset font
+                        doc.setTextColor(0, 0, 0); // Reset text color
+                    }
                     y += comments1.length * lineHeight + 6;
-                    doc.text(`Signature: ${formData.signature || ''}`, margin, y);
-                    doc.text(`Date: ${formatDate(formData.signatureDate) || ''}`, margin + 200, y);
+
+                    doc.setTextColor(0, 0, 0); // Black for label
+                    doc.text('Signature:', margin, y);
+                    if (formData.signature) {
+                        doc.setFont('helvetica', 'bold'); // Bold for value
+                        doc.setFontSize(12); // Same size as label
+                        doc.setTextColor(100, 100, 100); // Slight gray for value
+                        doc.text(formData.signature, margin + doc.getTextWidth('Signature: '), y);
+                        doc.setFont('helvetica', 'normal'); // Reset font
+                        doc.setTextColor(0, 0, 0); // Reset text color
+                    }
+
+                    doc.text('Date:', margin + 200, y);
+                    if (formData.signatureDate) {
+                        doc.setFont('helvetica', 'bold'); // Bold for value
+                        doc.setFontSize(12); // Same size as label
+                        doc.setTextColor(100, 100, 100); // Slight gray for value
+                        doc.text(formatDate(formData.signatureDate), margin + 200 + doc.getTextWidth('Date: '), y);
+                        doc.setFont('helvetica', 'normal'); // Reset font
+                        doc.setTextColor(0, 0, 0); // Reset text color
+                    }
                     y += 12;
 
                     if (isSecondDayDetailsVisible) {
@@ -692,7 +777,7 @@
                         doc.line(margin, y, pageWidth - margin, y);
                         y += 6;
                         doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(10);
+                        doc.setFontSize(12); // Increased font size for labels
 
                         const secondDayDetails = [
                             { label: 'Date', value: formatDate(formData.secondDate) },
@@ -705,15 +790,52 @@
                         secondDayDetails.forEach((item, index) => {
                             const col = index % 2 === 0 ? 0 : 200;
                             const row = Math.floor(index / 2);
-                            doc.text(`${item.label}: ${item.value || ''}`, margin + col, y + row * lineHeight);
+                            doc.setTextColor(0, 0, 0); // Black for label
+                            doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
+                            if (item.value) {
+                                doc.setFont('helvetica', 'bold'); // Bold for value
+                                doc.setFontSize(12); // Same size as label
+                                doc.setTextColor(100, 100, 100); // Slight gray for value
+                                doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
+                                doc.setFont('helvetica', 'normal'); // Reset font
+                                doc.setTextColor(0, 0, 0); // Reset text color
+                            }
                         });
                         y += Math.ceil(secondDayDetails.length / 2) * lineHeight + 6;
 
                         const comments2 = doc.splitTextToSize(`Comments: ${formData.secondEventEngineerComments || ''}`, pageWidth - (margin * 2));
-                        doc.text(comments2, margin, y);
+                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.text('Comments:', margin, y);
+                        if (formData.secondEventEngineerComments) {
+                            doc.setFont('helvetica', 'bold'); // Bold for value
+                            doc.setFontSize(12); // Same size as label
+                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.text(formData.secondEventEngineerComments, margin + doc.getTextWidth('Comments: '), y);
+                            doc.setFont('helvetica', 'normal'); // Reset font
+                            doc.setTextColor(0, 0, 0); // Reset text color
+                        }
                         y += comments2.length * lineHeight + 6;
-                        doc.text(`Signature: ${formData.secondSignature || ''}`, margin, y);
-                        doc.text(`Date: ${formatDate(formData.secondSignatureDate) || ''}`, margin + 200, y);
+
+                        doc.setTextColor(0, 0, 0); // Black for label
+                        doc.text('Signature:', margin, y);
+                        if (formData.secondSignature) {
+                            doc.setFont('helvetica', 'bold'); // Bold for value
+                            doc.setFontSize(12); // Same size as label
+                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.text(formData.secondSignature, margin + doc.getTextWidth('Signature: '), y);
+                            doc.setFont('helvetica', 'normal'); // Reset font
+                            doc.setTextColor(0, 0, 0); // Reset text color
+                        }
+
+                        doc.text('Date:', margin + 200, y);
+                        if (formData.secondSignatureDate) {
+                            doc.setFont('helvetica', 'bold'); // Bold for value
+                            doc.setFontSize(12); // Same size as label
+                            doc.setTextColor(100, 100, 100); // Slight gray for value
+                            doc.text(formatDate(formData.secondSignatureDate), margin + 200 + doc.getTextWidth('Date: '), y);
+                            doc.setFont('helvetica', 'normal'); // Reset font
+                            doc.setTextColor(0, 0, 0); // Reset text color
+                        }
                     }
 
                     console.log('PDF generated successfully');
@@ -781,7 +903,7 @@
                         ['State/City', formData.city],
                         ['Setup Type', formData.setupType.join(', ') || null],
                         ['Show Type', formData.showType],
-                        ['Show Setup', formData.showSetup],
+                        ['Show Setup', `Camera: ${formData.camera || ''} | Jimmy Jib: ${formData.jimmyJib || ''}`],
                         ['Broadcast Type', formData.broadcastType],
                         ['Live Platform', formData.broadcastType === 'Live' ? formData.livePlatform : 'N/A'],
                         [],
@@ -910,12 +1032,13 @@
                         >
                             <span className="text-xl">🏠</span>
                         </a>
-                        <div className="flex-1 flex justify-center space-x-4">
-                            <button type="button" onClick={generatePDF} className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200 shadow-md">
-                                Download PDF
-                            </button>
-                            <button type="button" onClick={generateExcel} className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition duration-200 shadow-md">
-                                Download Excel
+                        <div className="flex-1 flex justify-center">
+                            <button 
+                                type="button" 
+                                onClick={generatePDF} 
+                                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200 shadow-md"
+                            >
+                                Generate Report
                             </button>
                         </div>
                     </div>
@@ -1047,14 +1170,27 @@
                                             </button>
                                         </div>
                                     </div>
+                                </div>
+                                <div className="flex space-x-4">
                                     <div className="flex-1">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Show Setup</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Camera</label>
                                         <input
                                             type="text"
-                                            name="showSetup"
-                                            value={formData.showSetup}
+                                            name="camera"
+                                            value={formData.camera}
                                             onChange={handleInputChange}
-                                            placeholder="Show Setup"
+                                            placeholder="Camera"
+                                            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Jimmy Jib</label>
+                                        <input
+                                            type="text"
+                                            name="jimmyJib"
+                                            value={formData.jimmyJib}
+                                            onChange={handleInputChange}
+                                            placeholder="Jimmy Jib"
                                             className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
                                         />
                                     </div>
@@ -1320,7 +1456,7 @@
                                                         onChange={(e) => handleLiveSourceInput(index, 'available', e.target.value)}
                                                         className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
                                                     >
-                                                        <option value="Select">Select</option>
+                                                      <option value="Select">Select</option>
                                                         <option value="Yes">Yes</option>
                                                         <option value="No">No</option>
                                                     </select>
