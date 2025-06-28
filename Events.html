@@ -16,8 +16,8 @@
     <!-- jsPDF and autoTable -->
     <script src="https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
-    <!-- SheetJS (Updated CDN) -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.21.0/dist/xlsx.full.min.js"></script>
+    <!-- SheetJS (Official CDN) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
         .glass-effect {
             background: rgba(255, 255, 255, 0.1);
@@ -724,8 +724,17 @@
                 }
             };
 
-            const generateExcel = () => {
+            const generateExcel = async () => {
                 try {
+                    // Check if XLSX is loaded, if not load it
+                    if (!window.XLSX) {
+                        await loadXLSX();
+                    }
+
+                    if (!window.XLSX) {
+                        throw new Error('XLSX library failed to load');
+                    }
+
                     if (!formData.eventName || !formData.date || !formData.channel || !formData.broadcastType) {
                         alert('Please fill in Event Name, Date, Channel, and Broadcast Type.');
                         return;
@@ -734,21 +743,14 @@
                         alert('Please select at least one Event Engineer.');
                         return;
                     }
-                    if (!window.XLSX || !window.XLSX.utils) {
-                        console.error('SheetJS library failed to load. Details:', {
-                            XLSX: window.XLSX,
-                            scriptSrc: 'https://cdn.jsdelivr.net/npm/xlsx@0.21.0/dist/xlsx.full.min.js',
-                            networkStatus: navigator.onLine ? 'Online' : 'Offline'
-                        });
-                        alert('Excel library failed to load. Please check your internet connection, disable any ad-blockers, or try again later.');
-                        return;
-                    }
+
                     console.log('Starting Excel generation...', formData);
                     const wb = XLSX.utils.book_new();
                     const hasHiredEquipment = formData.equipment.some(item => item.hired);
                     const equipmentHeaders = hasHiredEquipment
                         ? ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Hired', 'Vendor Name', 'Remarks', 'Status']
                         : ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Remarks', 'Status'];
+                    
                     const equipmentData = formData.equipment.map((item, index) => {
                         const baseRow = [
                             index + 1,
@@ -767,6 +769,7 @@
                         }
                         return baseRow;
                     });
+
                     const wsData = [
                         ['Network 18 Event Report'],
                         ['Day Selection', formData.daySelection !== 'Select' ? formData.daySelection : null],
@@ -833,6 +836,7 @@
                         ['Signature', formData.signature],
                         ['Date', formData.signatureDate ? formatDate(formData.signatureDate) : '']
                     ];
+
                     if (formData.daySelection === '2' || formData.secondDate || formData.secondCheckingDone || formData.secondFeedTestLocation || formData.secondFeedTestTime || formData.secondEventDuration || formData.secondEventEngineerComments || formData.secondSignature || formData.secondSignatureDate) {
                         wsData.push(
                             [],
@@ -847,7 +851,7 @@
                             ['Date', formData.secondSignatureDate ? formatDate(formData.secondSignatureDate) : '']
                         );
                     }
-                    console.log('wsData:', wsData);
+
                     const ws = XLSX.utils.aoa_to_sheet(wsData);
                     XLSX.utils.book_append_sheet(wb, ws, 'Event Report');
                     const { fileTimestamp } = getFormattedDateTime();
@@ -857,6 +861,18 @@
                     console.error('Excel generation error:', error.stack);
                     alert('Failed to generate Excel: ' + error.message);
                 }
+            };
+
+            const loadXLSX = () => {
+                return new Promise((resolve, reject) => {
+                    if (window.XLSX) return resolve();
+                    
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
             };
 
             const isSecondDayDetailsVisible = formData.daySelection === '2' ||
@@ -1516,7 +1532,7 @@
                                 ></textarea>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <input
-                                       type="text"
+                                        type="text"
                                         name="secondSignature"
                                         value={formData.secondSignature}
                                         onChange={handleInputChange}
