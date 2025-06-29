@@ -266,6 +266,8 @@
         secondCheckingDone: '',
         secondFeedTestLocation: '',
         secondFeedTestTime: '',
+        secondEventStartTime: '',
+        secondEventEndTime: '',
         secondEventDuration: '',
         secondEventEngineerComments: '',
         secondSignature: '',
@@ -314,7 +316,7 @@
             }
             return {
               ...prevFormData,
-              livePlatform: [...currentPlatforms, platform],
+                livePlatform: [...currentPlatforms, platform],
             };
           });
         } catch (error) {
@@ -444,6 +446,31 @@
           console.error('Duration calculation error:', error);
         }
       }, [formData.eventStartTime, formData.eventEndTime]);
+
+      React.useEffect(() => {
+        try {
+          const { secondEventStartTime, secondEventEndTime } = formData;
+          if (secondEventStartTime && secondEventEndTime) {
+            const start = new Date(`1970-01-01T${secondEventStartTime}:00`);
+            const end = new Date(`1970-01-01T${secondEventEndTime}:00`);
+
+            if (end < start) {
+              end.setDate(end.getDate() + 1);
+            }
+
+            const diffMs = end - start;
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+            const duration = `${hours} hour${hours !== 1 ? 's' : ''}${minutes > 0 ? ` ${minutes} minute${minutes !== 1 ? 's' : ''}` : ''}`;
+            setFormData((prev) => ({ ...prev, secondEventDuration: duration.trim() }));
+          } else {
+            setFormData((prev) => ({ ...prev, secondEventDuration: '' }));
+          }
+        } catch (error) {
+          console.error('Second day duration calculation error:', error);
+        }
+      }, [formData.secondEventStartTime, formData.secondEventEndTime]);
 
       const handleSubmit = (e) => {
         try {
@@ -895,6 +922,8 @@
             formData.secondCheckingDone ||
             formData.secondFeedTestLocation ||
             formData.secondFeedTestTime ||
+            formData.secondEventStartTime ||
+            formData.secondEventEndTime ||
             formData.secondEventDuration ||
             formData.secondEventEngineerComments ||
             formData.secondSignature ||
@@ -916,6 +945,8 @@
               { label: 'Checking Done', value: formData.secondCheckingDone },
               { label: 'Feed Test Location', value: formData.secondFeedTestLocation },
               { label: 'Feed Test Time', value: formData.secondFeedTestTime },
+              { label: 'Start Time', value: formData.secondEventStartTime },
+              { label: 'End Time', value: formData.secondEventEndTime },
               { label: 'Duration', value: formData.secondEventDuration },
             ];
 
@@ -1062,6 +1093,18 @@
             ['Date', formData.signatureDate ? formatDate(formData.signatureDate) : ''],
           ];
 
+          const isSecondDayDetailsVisible = formData.daySelection === '2' ||
+            formData.secondDate ||
+            formData.secondCheckingDone ||
+            formData.secondFeedTestLocation ||
+            formData.secondFeedTestTime ||
+            formData.secondEventStartTime ||
+            formData.secondEventEndTime ||
+            formData.secondEventDuration ||
+            formData.secondEventEngineerComments ||
+            formData.secondSignature ||
+            formData.secondSignatureDate;
+
           if (isSecondDayDetailsVisible) {
             wsData.push(
               [],
@@ -1070,6 +1113,8 @@
               ['Checking Done', formData.secondCheckingDone],
               ['Feed Test Location', formData.secondFeedTestLocation],
               ['Feed Test Time', formData.secondFeedTestTime],
+              ['Event Start Time', formData.secondEventStartTime],
+              ['Event End Time', formData.secondEventEndTime],
               ['Event Duration', formData.secondEventDuration],
               ['Comments', formData.secondEventEngineerComments],
               ['Signature', formData.secondSignature],
@@ -1120,6 +1165,8 @@
         formData.secondCheckingDone ||
         formData.secondFeedTestLocation ||
         formData.secondFeedTestTime ||
+        formData.secondEventStartTime ||
+        formData.secondEventEndTime ||
         formData.secondEventDuration ||
         formData.secondEventEngineerComments ||
         formData.secondSignature ||
@@ -1342,22 +1389,6 @@
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Show Type</label>
-                  <select
-                    name="showType"
-                    value={formData.showType}
-                    onChange={handleInputChange}
-                    className="p-3 border border-gray-300 rounded-lg w-full"
-                  >
-                    <option value="">Select Show Type</option>
-                    <option value="Intellectual Property (IP)">Intellectual Property (IP)</option>
-                    <option value="News">News</option>
-                    <option value="Focus">Focus</option>
-                    <option value="Media Partnership">Media Partnership</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Camera</label>
                   <input
                     type="text"
@@ -1378,6 +1409,22 @@
                     placeholder="Jimmy Jib"
                     className="p-3 border border-gray-300 rounded-lg w-full"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Show Type</label>
+                  <select
+                    name="showType"
+                    value={formData.showType}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  >
+                    <option value="">Select Show Type</option>
+                    <option value="Intellectual Property (IP)">Intellectual Property (IP)</option>
+                    <option value="News">News</option>
+                    <option value="Focus">Focus</option>
+                    <option value="Media Partnership">Media Partnership</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -1671,7 +1718,7 @@
                         </td>
                         <td className="p-3 border-b">
                           <input
-                           type="text"
+                            type="text"
                             value={item.remarks}
                             onChange={(e) => handleEquipmentInput(index, 'remarks', e.target.value)}
                             className="p-2 border border-gray-300 rounded w-full"
@@ -1680,348 +1727,364 @@
                         <td className="p-3 border-b">
                           <input
                             type="text"
-                                                        value={item.status}
-                                                        onChange={(e) => handleEquipmentInput(index, 'status', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full"
-                                                    />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                            value={item.status}
+                            onChange={(e) => handleEquipmentInput(index, 'status', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-full"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-                        {/* Live Source Section */}
-                        <div className="form-section p-4 md:p-6">
-                            <h2 className="text-xl md:text-2xl font-semibold mb-4">Live Source</h2>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-                                    <thead>
-                                        <tr className="table-header">
-                                            <th className="p-3 border-b text-center text-sm font-medium">Sr.No.</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Name</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Available</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Type</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Bandwidth</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Note</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {formData.liveSource.map((item, index) => (
-                                            <tr key={index} className="table-row">
-                                                <td className="p-3 border-b text-center">{index + 1}</td>
-                                                <td className="p-3 border-b text-left">{item.name}</td>
-                                                <td className="p-3 border-b text-center">
-                                                    <select
-                                                        value={item.available}
-                                                        onChange={(e) => handleLiveSourceInput(index, 'available', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full text-center"
-                                                    >
-                                                        <option value="Select">Select</option>
-                                                        <option value="Yes">Yes</option>
-                                                        <option value="No">No</option>
-                                                    </select>
-                                                </td>
-                                                <td className="p-3 border-b text-center">
-                                                    {index < 3 ? (
-                                                        <select
-                                                            value={item.source}
-                                                            onChange={(e) => handleLiveSourceInput(index, 'source', e.target.value)}
-                                                            className="p-2 border border-gray-300 rounded w-full text-center"
-                                                        >
-                                                            <option value="">Select</option>
-                                                            <option value="LiveU">LiveU</option>
-                                                            <option value="OB">OB</option>
-                                                        </select>
-                                                    ) : (
-                                                        <select
-                                                            value={item.unit}
-                                                            onChange={(e) => handleLiveSourceInput(index, 'unit', e.target.value)}
-                                                            className="p-2 border border-gray-300 rounded w-full text-center"
-                                                        >
-                                                            <option value="Mbps">Mbps</option>
-                                                            <option value="Gbps">Gbps</option>
-                                                        </select>
-                                                    )}
-                                                </td>
-                                                <td className="p-3 border-b text-center">
-                                                    <input
-                                                        type="text"
-                                                        value={item.value}
-                                                        onChange={(e) => handleLiveSourceInput(index, 'value', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full text-center"
-                                                        placeholder="Bandwidth"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b text-center">
-                                                    <input
-                                                        type="text"
-                                                        value={item.notes}
-                                                        onChange={(e) => handleLiveSourceInput(index, 'notes', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full text-center"
-                                                        placeholder="Enter Note"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b text-center">
-                                                    <input
-                                                        type="text"
-                                                        value={item.status}
-                                                        onChange={(e) => handleLiveSourceInput(index, 'status', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full text-center"
-                                                        placeholder="Status"
-                                                    />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Electrical Power Source Section */}
-                        <div className="form-section p-4 md:p-6">
-                            <h2 className="text-xl md:text-2xl font-semibold mb-4">Electrical Power Source</h2>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-                                    <thead>
-                                        <tr className="table-header">
-                                            <th className="p-3 border-b text-center text-sm font-medium">Sr.No.</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Source</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Available</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">kVA</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Enter Value</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Note</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {formData.power.map((item, index) => (
-                                            <tr key={index} className="table-row">
-                                                <td className="p-3 border-b text-center">{index + 1}</td>
-                                                <td className="p-3 border-b text-left">{item.source}</td>
-                                                <td className="p-3 border-b text-center">
-                                                    <select
-                                                        value={item.available}
-                                                        onChange={(e) => handlePowerInput(index, 'available', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full text-center"
-                                                    >
-                                                        <option value="">Select</option>
-                                                        <option value="Yes">Yes</option>
-                                                        <option value="No">No</option>
-                                                    </select>
-                                                </td>
-                                                <td className="p-3 border-b text-center">
-                                                    <input
-                                                        type="text"
-                                                        value={item.kVA}
-                                                        onChange={(e) => handlePowerInput(index, 'kVA', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full text-center"
-                                                        placeholder="kVA"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b text-center">
-                                                    <input
-                                                        type="text"
-                                                        value={item.enterValue}
-                                                        onChange={(e) => handlePowerInput(index, 'enterValue', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full text-center"
-                                                        placeholder="Enter Value"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b text-center">
-                                                    <input
-                                                        type="text"
-                                                        value={item.note}
-                                                        onChange={(e) => handlePowerInput(index, 'note', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full text-center"
-                                                        placeholder="Note"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b text-center">
-                                                    <input
-                                                        type="text"
-                                                        value={item.status}
-                                                        onChange={(e) => handlePowerInput(index, 'status', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full text-center"
-                                                        placeholder="Status"
-                                                    />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Engineer Comments & Signature (Day 1) Section */}
-                        <div className="form-section p-4 md:p-6">
-                            <h2 className="text-xl md:text-2xl font-semibold mb-4">Engineer Comments & Signature (Day 1)</h2>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Comments</label>
-                                <textarea
-                                    name="eventEngineerComments"
-                                    value={formData.eventEngineerComments}
-                                    onChange={handleInputChange}
-                                    placeholder="Event Engineer Comments & Remarks"
-                                    className="p-3 border border-gray-300 rounded-lg w-full h-20"
-                                ></textarea>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Signature</label>
-                                    <input
-                                        type="text"
-                                        name="signature"
-                                        value={formData.signature}
-                                        onChange={handleInputChange}
-                                        placeholder="Signature"
-                                        className="p-3 border border-gray-300 rounded-lg w-full"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                                    <input
-                                        type="date"
-                                        name="signatureDate"
-                                        value={formData.signatureDate}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg w-full"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Second Day Details Section (if applicable) */}
-                        {isSecondDayDetailsVisible && (
-                            <div className="form-section p-4 md:p-6">
-                                <h2 className="text-xl md:text-2xl font-semibold mb-4">Second Day Details</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                                        <input
-                                            type="date"
-                                            name="secondDate"
-                                            value={formData.secondDate}
-                                            onChange={handleInputChange}
-                                            className="p-3 border border-gray-300 rounded-lg w-full"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Checking Done</label>
-                                        <input
-                                            type="text"
-                                            name="secondCheckingDone"
-                                            value={formData.secondCheckingDone}
-                                            onChange={handleInputChange}
-                                            placeholder="Checking Done"
-                                            className="p-3 border border-gray-300 rounded-lg w-full"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Feed Test Location</label>
-                                        <input
-                                            type="text"
-                                            name="secondFeedTestLocation"
-                                            value={formData.secondFeedTestLocation}
-                                            onChange={handleInputChange}
-                                            placeholder="Feed Test Location"
-                                            className="p-3 border border-gray-300 rounded-lg w-full"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Feed Test Time</label>
-                                        <input
-                                            type="time"
-                                            name="secondFeedTestTime"
-                                            value={formData.secondFeedTestTime}
-                                            onChange={handleInputChange}
-                                            className="p-3 border border-gray-300 rounded-lg w-full"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Event Duration</label>
-                                        <input
-                                            type="text"
-                                            name="secondEventDuration"
-                                            value={formData.secondEventDuration}
-                                            onChange={handleInputChange}
-                                            placeholder="Event Duration"
-                                            className="p-3 border border-gray-300 rounded-lg w-full"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Comments (Day 2)</label>
-                                    <textarea
-                                        name="secondEventEngineerComments"
-                                        value={formData.secondEventEngineerComments}
-                                        onChange={handleInputChange}
-                                        placeholder="Event Engineer Comments & Remarks (Day 2)"
-                                        className="p-3 border border-gray-300 rounded-lg w-full h-20"
-                                    ></textarea>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Signature</label>
-                                        <input
-                                            type="text"
-                                            name="secondSignature"
-                                            value={formData.secondSignature}
-                                            onChange={handleInputChange}
-                                            placeholder="Signature"
-                                            className="p-3 border border-gray-300 rounded-lg w-full"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                                        <input
-                                            type="date"
-                                            name="secondSignatureDate"
-                                            value={formData.secondSignatureDate}
-                                            onChange={handleInputChange}
-                                            className="p-3 border border-gray-300 rounded-lg w-full"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Form Submission Buttons */}
-                        <div className="flex justify-center space-x-4 mt-8">
-                            <button 
-                                type="button" 
-                                onClick={generatePDF}
-                                className="btn-primary px-6 py-3 rounded-lg"
+            <div className="form-section p-4 md:p-6">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4">Live Source</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                  <thead>
+                    <tr className="table-header">
+                      <th className="p-3 border-b text-center text-sm font-medium">Sr.No.</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Name</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Available</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Type</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Bandwidth</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Note</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.liveSource.map((item, index) => (
+                      <tr key={index} className="table-row">
+                        <td className="p-3 border-b text-center">{index + 1}</td>
+                        <td className="p-3 border-b text-left">{item.name}</td>
+                        <td className="p-3 border-b text-center">
+                          <select
+                            value={item.available}
+                            onChange={(e) => handleLiveSourceInput(index, 'available', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-full text-center"
+                          >
+                            <option value="Select">Select</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </select>
+                        </td>
+                        <td className="p-3 border-b text-center">
+                          {index < 3 ? (
+                            <select
+                              value={item.source}
+                              onChange={(e) => handleLiveSourceInput(index, 'source', e.target.value)}
+                              className="p-2 border border-gray-300 rounded w-full text-center"
                             >
-                                Generate PDF Report
-                            </button>
-                            <button 
-                                type="button" 
-                                onClick={generateExcel}
-                                className="btn-secondary px-6 py-3 rounded-lg"
+                              <option value="">Select</option>
+                              <option value="LiveU">LiveU</option>
+                              <option value="OB">OB</option>
+                            </select>
+                          ) : (
+                            <select
+                              value={item.unit}
+                              onChange={(e) => handleLiveSourceInput(index, 'unit', e.target.value)}
+                              className="p-2 border border-gray-300 rounded w-full text-center"
                             >
-                                Generate Excel Report
-                            </button>
-                        </div>
-                    </form>
+                              <option value="Mbps">Mbps</option>
+                              <option value="Gbps">Gbps</option>
+                            </select>
+                          )}
+                        </td>
+                        <td className="p-3 border-b text-center">
+                          <input
+                            type="text"
+                            value={item.value}
+                            onChange={(e) => handleLiveSourceInput(index, 'value', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-full text-center"
+                            placeholder="Bandwidth"
+                          />
+                        </td>
+                        <td className="p-3 border-b text-center">
+                          <input
+                            type="text"
+                            value={item.notes}
+                            onChange={(e) => handleLiveSourceInput(index, 'notes', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-full text-center"
+                            placeholder="Enter Note"
+                          />
+                        </td>
+                        <td className="p-3 border-b text-center">
+                          <input
+                            type="text"
+                            value={item.status}
+                            onChange={(e) => handleLiveSourceInput(index, 'status', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-full text-center"
+                            placeholder="Status"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="form-section p-4 md:p-6">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4">Electrical Power Source</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                  <thead>
+                    <tr className="table-header">
+                      <th className="p-3 border-b text-center text-sm font-medium">Sr.No.</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Source</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Available</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">kVA</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Enter Value</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Note</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.power.map((item, index) => (
+                      <tr key={index} className="table-row">
+                        <td className="p-3 border-b text-center">{index + 1}</td>
+                        <td className="p-3 border-b text-left">{item.source}</td>
+                        <td className="p-3 border-b text-center">
+                          <select
+                            value={item.available}
+                            onChange={(e) => handlePowerInput(index, 'available', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-full text-center"
+                          >
+                            <option value="">Select</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </select>
+                        </td>
+                        <td className="p-3 border-b text-center">
+                          <input
+                            type="text"
+                            value={item.kVA}
+                            onChange={(e) => handlePowerInput(index, 'kVA', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-full text-center"
+                            placeholder="kVA"
+                          />
+                        </td>
+                        <td className="p-3 border-b text-center">
+                          <input
+                            type="text"
+                            value={item.enterValue}
+                            onChange={(e) => handlePowerInput(index, 'enterValue', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-full text-center"
+                            placeholder="Enter Value"
+                          />
+                        </td>
+                        <td className="p-3 border-b text-center">
+                          <input
+                            type="text"
+                            value={item.note}
+                            onChange={(e) => handlePowerInput(index, 'note', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-full text-center"
+                            placeholder="Note"
+                          />
+                        </td>
+                        <td className="p-3 border-b text-center">
+                          <input
+                            type="text"
+                            value={item.status}
+                            onChange={(e) => handlePowerInput(index, 'status', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-full text-center"
+                            placeholder="Status"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="form-section p-4 md:p-6">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4">Engineer Comments & Signature (Day 1)</h2>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Comments</label>
+                <textarea
+                  name="eventEngineerComments"
+                  value={formData.eventEngineerComments}
+                  onChange={handleInputChange}
+                  placeholder="Event Engineer Comments & Remarks"
+                  className="p-3 border border-gray-300 rounded-lg w-full h-20"
+                ></textarea>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Signature</label>
+                  <input
+                    type="text"
+                    name="signature"
+                    value={formData.signature}
+                    onChange={handleInputChange}
+                    placeholder="Signature"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
                 </div>
-            );
-        }
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    name="signatureDate"
+                    value={formData.signatureDate}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+              </div>
+            </div>
 
-        try {
-            const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(
-                <ErrorBoundary>
-                    <EventReportForm />
-                </ErrorBoundary>
-            );
-        } catch (error) {
-            console.error('Render error:', error);
-            document.getElementById('error').className = 'text-red-600 p-4';
-            document.getElementById('error').innerText = `Failed to render: ${error.message}`;
-        }
-    </script>
+            {isSecondDayDetailsVisible && (
+              <div className="form-section p-4 md:p-6">
+                <h2 className="text-xl md:text-2xl font-semibold mb-4">Second Day Details</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <input
+                      type="date"
+                      name="secondDate"
+                      value={formData.secondDate}
+                      onChange={handleInputChange}
+                      className="p-3 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Checking Done</label>
+                    <input
+                      type="text"
+                      name="secondCheckingDone"
+                      value={formData.secondCheckingDone}
+                      onChange={handleInputChange}
+                      placeholder="Checking Done"
+                      className="p-3 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Feed Test Location</label>
+                    <input
+                      type="text"
+                      name="secondFeedTestLocation"
+                      value={formData.secondFeedTestLocation}
+                      onChange={handleInputChange}
+                      placeholder="Feed Test Location"
+                      className="p-3 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Feed Test Time</label>
+                    <input
+                      type="time"
+                      name="secondFeedTestTime"
+                      value={formData.secondFeedTestTime}
+                      onChange={handleInputChange}
+                      className="p-3 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Event Start Time</label>
+                    <input
+                      type="time"
+                      name="secondEventStartTime"
+                      value={formData.secondEventStartTime}
+                      onChange={handleInputChange}
+                      className="p-3 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Event End Time</label>
+                    <input
+                      type="time"
+                      name="secondEventEndTime"
+                      value={formData.secondEventEndTime}
+                      onChange={handleInputChange}
+                      className="p-3 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Event Duration</label>
+                    <input
+                      type="text"
+                      name="secondEventDuration"
+                      value={formData.secondEventDuration}
+                      onChange={handleInputChange}
+                      placeholder="Event Duration"
+                      className="p-3 border border-gray-300 rounded-lg w-full"
+                      readOnly
+                    />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Comments (Day 2)</label>
+                  <textarea
+                    name="secondEventEngineerComments"
+                    value={formData.secondEventEngineerComments}
+                    onChange={handleInputChange}
+                    placeholder="Event Engineer Comments & Remarks (Day 2)"
+                    className="p-3 border border-gray-300 rounded-lg w-full h-20"
+                  ></textarea>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Signature</label>
+                    <input
+                      type="text"
+                      name="secondSignature"
+                      value={formData.secondSignature}
+                      onChange={handleInputChange}
+                      placeholder="Signature"
+                      className="p-3 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <input
+                      type="date"
+                      name="secondSignatureDate"
+                      value={formData.secondSignatureDate}
+                      onChange={handleInputChange}
+                      className="p-3 border border-gray-300 rounded-lg w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-center space-x-4 mt-8">
+              <button 
+                type="button" 
+                onClick={generatePDF}
+                className="btn-primary px-6 py-3 rounded-lg"
+              >
+                Generate PDF Report
+              </button>
+              <button 
+                type="button" 
+                onClick={generateExcel}
+                className="btn-secondary px-6 py-3 rounded-lg"
+              >
+                Generate Excel Report
+              </button>
+            </div>
+          </form>
+        </div>
+      );
+    }
+
+    try {
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(
+        <ErrorBoundary>
+          <EventReportForm />
+        </ErrorBoundary>
+      );
+    } catch (error) {
+      console.error('Render error:', error);
+      document.getElementById('error').className = 'text-red-600 p-4';
+      document.getElementById('error').innerText = `Failed to render: ${error.message}`;
+    }
+  </script>
 </body>
 </html>
