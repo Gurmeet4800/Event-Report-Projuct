@@ -101,6 +101,13 @@
       background-color: #2d3748;
       transform: translateY(-1px);
     }
+    .vendor-chip {
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .vendor-chip:hover {
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -194,6 +201,14 @@
       const ocrData = processOCRData(gk_fileData['Network18_Event_Report_Rising_Bharat_29-06-2025_11-13.pdf']);
       console.log('Processed OCR Data:', ocrData);
 
+      const [vendors, setVendors] = React.useState(() => {
+        const savedVendors = localStorage.getItem('network18-vendors');
+        return savedVendors ? JSON.parse(savedVendors) : [
+          "JayTech", "Jeeva", "KVS LKO", "GKS Media"
+        ];
+      });
+      const [globalVendor, setGlobalVendor] = React.useState('');
+
       const [formData, setFormData] = React.useState({
         daySelection: 'Select',
         createdBy: '',
@@ -273,6 +288,14 @@
         secondSignature: '',
         secondSignatureDate: '',
       });
+
+      const addVendor = (vendor) => {
+        if (vendor && !vendors.includes(vendor)) {
+          const newVendors = [...vendors, vendor];
+          setVendors(newVendors);
+          localStorage.setItem('network18-vendors', JSON.stringify(newVendors));
+        }
+      };
 
       const handleInputChange = (e) => {
         try {
@@ -420,6 +443,25 @@
         } catch (error) {
           console.error('Power input error:', error);
         }
+      };
+
+      const applyGlobalVendor = () => {
+        const updatedEquipment = formData.equipment.map(item => {
+          if (item.hired) {
+            return {...item, vendorName: globalVendor};
+          }
+          return item;
+        });
+        setFormData({...formData, equipment: updatedEquipment});
+      };
+
+      const toggleAllHired = () => {
+        const updatedEquipment = formData.equipment.map(item => ({
+          ...item,
+          hired: !item.hired,
+          vendorName: item.hired ? '' : globalVendor
+        }));
+        setFormData({...formData, equipment: updatedEquipment});
       };
 
       React.useEffect(() => {
@@ -1632,6 +1674,55 @@
 
             <div className="form-section p-4 md:p-6">
               <h2 className="text-xl md:text-2xl font-semibold mb-4">Equipment</h2>
+              
+              {/* Vendor Management Controls */}
+              <div className="mb-4 flex flex-wrap items-center gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Global Vendor</label>
+                  <div className="flex items-center">
+                    <select
+                      value={globalVendor}
+                      onChange={(e) => setGlobalVendor(e.target.value)}
+                      className="p-2 border border-gray-300 rounded mr-2"
+                    >
+                      <option value="">Select Global Vendor</option>
+                      {vendors.map(vendor => (
+                        <option key={vendor} value={vendor}>{vendor}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={applyGlobalVendor}
+                      className="btn-primary px-3 py-2 rounded-lg text-sm"
+                      disabled={!globalVendor}
+                    >
+                      Apply to All Hired
+                    </button>
+                    <button
+                      onClick={toggleAllHired}
+                      className="btn-secondary px-3 py-2 rounded-lg text-sm ml-2"
+                    >
+                      Toggle All Hired
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  {vendors.map(vendor => (
+                    <span 
+                      key={vendor}
+                      onClick={() => setGlobalVendor(vendor)}
+                      className={`px-3 py-1 rounded-full text-sm cursor-pointer vendor-chip ${
+                        globalVendor === vendor 
+                          ? 'bg-network18-blue text-white' 
+                          : 'bg-gray-200 hover:bg-gray-300'
+                      }`}
+                    >
+                      {vendor}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              
               <div className="overflow-x-auto">
                 <table className="min-w-full bg-white border border-gray-200 rounded-lg">
                   <thead>
@@ -1705,13 +1796,29 @@
                         </td>
                         <td className="p-3 border-b">
                           {item.hired ? (
-                            <input
-                              type="text"
-                              value={item.vendorName}
-                              onChange={(e) => handleEquipmentInput(index, 'vendorName', e.target.value)}
-                              placeholder="Vendor Name"
-                              className="p-2 border border-gray-300 rounded w-full"
-                            />
+                            <div className="flex items-center">
+                              <select
+                                value={item.vendorName}
+                                onChange={(e) => {
+                                  handleEquipmentInput(index, 'vendorName', e.target.value);
+                                  addVendor(e.target.value);
+                                }}
+                                className="p-2 border border-gray-300 rounded w-full mr-2"
+                                list="vendor-list"
+                              >
+                                <option value="">Select Vendor</option>
+                                {vendors.map(vendor => (
+                                  <option key={vendor} value={vendor}>{vendor}</option>
+                                ))}
+                              </select>
+                              <button
+                                onClick={() => handleEquipmentInput(index, 'vendorName', globalVendor)}
+                                className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
+                                title="Use Global Vendor"
+                              >
+                                Use Global
+                              </button>
+                            </div>
                           ) : (
                             <span>-</span>
                           )}
