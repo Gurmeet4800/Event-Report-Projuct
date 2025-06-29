@@ -1,1503 +1,1688 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Report Form</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React and ReactDOM -->
-    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
-    <!-- PropTypes -->
-    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
-    <!-- Babel Standalone -->
-    <script src="https://unpkg.com/@babel/standalone@7.25.7/babel.min.js"></script>
-    <!-- jsPDF and autoTable -->
-    <script src="https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
-    <script src="https://unpkg.com/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
-    <!-- SheetJS (Official CDN) -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <style>
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        .glass-effect:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        }
-        @supports not (backdrop-filter: blur(10px)) {
-            .glass-effect {
-                background: rgba(255, 255, 255, 0.3);
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network18 Event Report</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            network18: {
+              blue: '#0056b3',
+              darkblue: '#003d7a',
+              lightblue: '#e6f0fa'
             }
+          },
+          fontFamily: {
+            sans: ['Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif']
+          }
         }
-    </style>
+      }
+    }
+  </script>
+  <!-- React and ReactDOM -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <!-- PropTypes -->
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone@7.25.7/babel.min.js"></script>
+  <!-- jsPDF and autoTable -->
+  <script src="https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+  <!-- SheetJS -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <style>
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    .glass-effect:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    @supports not (backdrop-filter: blur(10px)) {
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    }
+    .form-section {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+    }
+    .form-section h2 {
+      color: #2d3748;
+      font-weight: 600;
+      border-bottom: 2px solid #4299e1;
+      padding-bottom: 0.5rem;
+    }
+    .table-header {
+      background-color: #0056b3;
+      color: white;
+      font-weight: 500;
+    }
+    .table-row:hover {
+      background-color: #f7fafc;
+    }
+    input, select, textarea {
+      border: 1px solid #cbd5e0;
+      transition: all 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #4299e1;
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+    }
+    .btn-primary {
+      background-color: #0056b3;
+      color: white;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      background-color: #003d7a;
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background-color: #4a5568;
+      color: white;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      background-color: #2d3748;
+      transform: translateY(-1px);
+    }
+  </style>
 </head>
-<body className="bg-gray-50 font-sans">
-    <div id="root"></div>
-    <div id="error" className="hidden text-red-600 p-4"></div>
-    <script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-            return cell !== '' && cell != null;
+<body class="bg-gray-50 font-sans">
+  <div id="root"></div>
+  <div id="error" class="hidden text-red-600 p-4"></div>
+  <script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error('Error in loadFileData:', e);
+          return "";
         }
-        function loadFileData(filename) {
-            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-                try {
-                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                    var firstSheetName = workbook.SheetNames[0];
-                    var worksheet = workbook.Sheets[firstSheetName];
-                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                    var filteredData = jsonData.filter(row => row.some(filledCell));
-                    var headerRowIndex = filteredData.findIndex((row, index) =>
-                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                    );
-                    if (headerRowIndex === -1 || headerRowIndex > 25) {
-                        headerRowIndex = 0;
-                    }
-                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                    return csv;
-                } catch (e) {
-                    console.error('Error in loadFileData:', e);
-                    return "";
-                }
-            }
-            return gk_fileData[filename] || "";
-        }
-    </script>
-    <script type="text/babel">
-        class ErrorBoundary extends React.Component {
-            state = { hasError: false, error: null };
-            static getDerivedStateFromError(error) {
-                return { hasError: true, error };
-            }
-            componentDidCatch(error, errorInfo) {
-                console.error('Error caught by boundary:', error, errorInfo);
-                document.getElementById('error').className = 'text-red-600 p-4';
-                document.getElementById('error').innerText = `Error: ${error.message}`;
-            }
-            render() {
-                if (this.state.hasError) {
-                    return <h1>Something went wrong. Check the console for details.</h1>;
-                }
-                return this.props.children;
-            }
-        }
+      }
+      return gk_fileData[filename] || "";
+    }
+  </script>
+  <script type="text/babel">
+    // Process OCR data to deduplicate entries and correct errors
+    const processOCRData = (ocrContent) => {
+      if (!ocrContent) return { 'Event Name': '', 'Channel': '' };
 
-        function EventReportForm() {
-            const [formData, setFormData] = React.useState({
-                daySelection: 'Select',
-                createdBy: '',
-                eventName: '',
-                date: '',
-                channel: '',
-                location: '',
-                city: '',
-                setupType: [],
-                showType: '',
-                camera: '',
-                jimmyJib: '',
-                broadcastType: '',
-                livePlatform: [],
-                setupDate: '',
-                setupStartTime: '',
-                setupEndTime: '',
-                checkingDone: '',
-                eventEngineer: [],
-                customEngineer: '',
-                showProducer: '',
-                showDop: '',
-                onlineEditor: '',
-                electrical: '',
-                soundEngineer: '',
-                productionControl: '',
-                feedTestLocation: '',
-                feedTestTime: '',
-                eventStartTime: '',
-                eventEndTime: '',
-                eventDuration: '',
-                equipment: [
-                    { name: 'Cameras', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Lens', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Lens HJ 40x', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Lens HJ 24x', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Lens 70x', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Lens 14 Wide angle', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Tripod', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Jimmy Jib', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: '14" Monitor', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Plasma', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Switcher', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Talk Back', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'P2 VTR / AJA KI PRO', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Audio Mixer', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'PCR Speaker', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Anchor EP', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Watchout / Vmix', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'Main Sound', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-                    { name: 'PCR UPS', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' }
-                ],
-                liveSource: [
-                    { name: 'Uplink Main', available: 'Select', source: '', value: '', notes: '', status: '' },
-                    { name: 'Uplink Backup', available: 'Select', source: '', value: '', notes: '', status: '' },
-                    { name: 'Longshot Camera', available: 'Select', source: '', value: '', notes: '', status: '' },
-                    { name: 'LAN', available: 'Select', source: '', unit: 'Mbps', value: '', notes: '', status: '' }
-                ],
-                power: [
-                    { source: 'House Supply', available: '', kVA: '', enterValue: '', note: '', status: '' },
-                    { source: 'DG', available: '', kVA: '', enterValue: '', note: '', status: '' },
-                    { source: 'UPS', available: '', kVA: '', enterValue: '', note: '', status: '' },
-                    { source: 'ATS', available: '', kVA: '', enterValue: '', note: '', status: '' },
-                    { source: 'Earthling', available: '', kVA: '', enterValue: '', note: '', status: '' }
-                ],
-                eventEngineerComments: '',
-                signature: '',
-                signatureDate: '',
-                secondDate: '',
-                secondCheckingDone: '',
-                secondFeedTestLocation: '',
-                secondFeedTestTime: '',
-                secondEventDuration: '',
-                secondEventEngineerComments: '',
-                secondSignature: '',
-                secondSignatureDate: ''
+      const lines = ocrContent.split('\n').map(line => line.trim()).filter(line => line);
+      const uniqueEntries = [];
+      const seen = new Set();
+
+      for (const line of lines) {
+        if (!seen.has(line) && (line.includes('Event Name') || line.includes('Channel'))) {
+          seen.add(line);
+          uniqueEntries.push(line);
+        }
+      }
+
+      return uniqueEntries.reduce((acc, line) => {
+        const [key, value] = line.split(':').map(s => s.trim());
+        if (key === 'Channel' && value === 'Network 9') {
+          acc[key] = 'Network 18'; // Correct Network 9 to Network 18
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+    };
+
+    class ErrorBoundary extends React.Component {
+      state = { hasError: false, error: null };
+
+      static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+      }
+
+      componentDidCatch(error, errorInfo) {
+        console.error('Error caught by boundary:', error, errorInfo);
+        document.getElementById('error').className = 'text-red-600 p-4';
+        document.getElementById('error').innerText = `Error: ${error.message}`;
+      }
+
+      render() {
+        if (this.state.hasError) {
+          return <h1>Something went wrong. Check the console for details.</h1>;
+        }
+        return this.props.children;
+      }
+    }
+
+    ErrorBoundary.propTypes = {
+      children: PropTypes.node.isRequired,
+    };
+
+    function EventReportForm() {
+      const ocrData = processOCRData(gk_fileData['Network18_Event_Report_Rising_Bharat_29-06-2025_11-13.pdf']);
+      console.log('Processed OCR Data:', ocrData);
+
+      const [formData, setFormData] = React.useState({
+        daySelection: 'Select',
+        createdBy: '',
+        eventName: ocrData['Event Name'] || '',
+        date: '',
+        channel: '',
+        location: '',
+        city: '',
+        setupType: [],
+        showType: '',
+        camera: '',
+        jimmyJib: '',
+        broadcastType: '',
+        livePlatform: [],
+        setupDate: '',
+        setupStartTime: '',
+        setupEndTime: '',
+        checkingDone: '',
+        eventEngineer: [],
+        customEngineer: '',
+        showProducer: '',
+        showDop: '',
+        onlineEditor: '',
+        electrical: '',
+        soundEngineer: '',
+        productionControl: '',
+        feedTestLocation: '',
+        feedTestTime: '',
+        eventStartTime: '',
+        eventEndTime: '',
+        eventDuration: '',
+        equipment: [
+          { name: 'Cameras', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Lens', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Lens HJ 40x', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Lens HJ 24x', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Lens 70x', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Lens 14 Wide angle', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Tripod', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Jimmy Jib', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: '14" Monitor', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Plasma', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Switcher', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Talk Back', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'P2 VTR / AJA KI PRO', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Audio Mixer', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'PCR Speaker', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Anchor EP', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Watchout / Vmix', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'Main Sound', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: 'PCR UPS', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+        ],
+        liveSource: [
+          { name: 'Uplink Main', available: 'Select', source: '', value: '', notes: '', status: '' },
+          { name: 'Uplink Backup', available: 'Select', source: '', value: '', notes: '', status: '' },
+          { name: 'Longshot Camera', available: 'Select', source: '', value: '', notes: '', status: '' },
+          { name: 'LAN', available: 'Select', source: '', unit: 'Mbps', value: '', notes: '', status: '' },
+        ],
+        power: [
+          { source: 'House Supply', available: '', kVA: '', enterValue: '', note: '', status: '' },
+          { source: 'DG', available: '', kVA: '', enterValue: '', note: '', status: '' },
+          { source: 'UPS', available: '', kVA: '', enterValue: '', note: '', status: '' },
+          { source: 'ATS', available: '', kVA: '', enterValue: '', note: '', status: '' },
+          { source: 'Earthling', available: '', kVA: '', enterValue: '', note: '', status: '' },
+        ],
+        eventEngineerComments: '',
+        signature: '',
+        signatureDate: '',
+        secondDate: '',
+        secondCheckingDone: '',
+        secondFeedTestLocation: '',
+        secondFeedTestTime: '',
+        secondEventDuration: '',
+        secondEventEngineerComments: '',
+        secondSignature: '',
+        secondSignatureDate: '',
+      });
+
+      const handleInputChange = (e) => {
+        try {
+          const { name, value } = e.target;
+          setFormData({ ...formData, [name]: value });
+        } catch (error) {
+          console.error('Input change error:', error);
+        }
+      };
+
+      const handleSetupTypeRadio = (setup) => {
+        try {
+          setFormData((prevFormData) => {
+            if (prevFormData.setupType.includes(setup)) {
+              return { ...prevFormData, setupType: [] };
+            }
+            return { ...prevFormData, setupType: [setup] };
+          });
+        } catch (error) {
+          console.error('Setup type radio error:', error);
+        }
+      };
+
+      const handleClearSetupType = () => {
+        try {
+          setFormData((prevFormData) => ({ ...prevFormData, setupType: [] }));
+        } catch (error) {
+          console.error('Clear setup type error:', error);
+        }
+      };
+
+      const handleLivePlatformCheckbox = (platform) => {
+        try {
+          setFormData((prevFormData) => {
+            const currentPlatforms = prevFormData.livePlatform;
+            if (currentPlatforms.includes(platform)) {
+              return {
+                ...prevFormData,
+                livePlatform: currentPlatforms.filter(p => p !== platform),
+              };
+            }
+            return {
+              ...prevFormData,
+              livePlatform: [...currentPlatforms, platform],
+            };
+          });
+        } catch (error) {
+          console.error('Live platform checkbox error:', error);
+        }
+      };
+
+      const handleEventEngineerCheckbox = (engineerName) => {
+        try {
+          setFormData((prevFormData) => {
+            const currentEngineers = prevFormData.eventEngineer;
+            if (currentEngineers.includes(engineerName)) {
+              return {
+                ...prevFormData,
+                eventEngineer: currentEngineers.filter(name => name !== engineerName),
+              };
+            }
+            return {
+              ...prevFormData,
+              eventEngineer: [...currentEngineers, engineerName],
+            };
+          });
+        } catch (error) {
+          console.error('Event engineer checkbox error:', error);
+        }
+      };
+
+      const handleCustomEngineerChange = (e) => {
+        try {
+          const value = e.target.value.trim();
+          setFormData((prevFormData) => {
+            const currentEngineers = prevFormData.eventEngineer.filter(name =>
+              ['Munendra Kumar Tyagi', 'Kamal Kishore', 'Rajesh Kumar', 'Virendra Singh'].includes(name)
+            );
+            if (value) {
+              currentEngineers.push(value);
+            }
+            return {
+              ...prevFormData,
+              customEngineer: value,
+              eventEngineer: currentEngineers,
+            };
+          });
+        } catch (error) {
+          console.error('Custom engineer input error:', error);
+        }
+      };
+
+      const handleEquipmentCheckbox = (index, field) => {
+        try {
+          const updatedEquipment = [...formData.equipment];
+          updatedEquipment[index][field] = !updatedEquipment[index][field];
+          if (field === 'hired' && !updatedEquipment[index][field]) {
+            updatedEquipment[index].vendorName = '';
+          }
+          setFormData({ ...formData, equipment: updatedEquipment });
+        } catch (error) {
+          console.error('Equipment checkbox error:', error);
+        }
+      };
+
+      const handleEquipmentInput = (index, field, value) => {
+        try {
+          const updatedEquipment = [...formData.equipment];
+          updatedEquipment[index][field] = value;
+          setFormData({ ...formData, equipment: updatedEquipment });
+        } catch (error) {
+          console.error('Equipment input error:', error);
+        }
+      };
+
+      const handleLiveSourceInput = (index, field, value) => {
+        try {
+          const updatedLiveSource = [...formData.liveSource];
+          if (field === 'value' && index <= 2) {
+            const numValue = parseFloat(value);
+            const hasTwoOrMoreDigits = value.match(/^\d{2,}$/);
+            updatedLiveSource[index].value = !isNaN(numValue) && hasTwoOrMoreDigits ? `${numValue} Mbps` : value;
+          } else if (field === 'value' && index === 3) {
+            updatedLiveSource[index].value = value;
+            updatedLiveSource[index].source = updatedLiveSource[index].unit;
+          } else if (field === 'unit' && index === 3) {
+            updatedLiveSource[index].unit = value;
+            updatedLiveSource[index].source = value;
+          } else if (field === 'notes') {
+            updatedLiveSource[index].notes = value;
+          } else {
+            updatedLiveSource[index][field] = value;
+          }
+          setFormData({ ...formData, liveSource: updatedLiveSource });
+        } catch (error) {
+          console.error('Live source input error:', error);
+        }
+      };
+
+      const handlePowerInput = (index, field, value) => {
+        try {
+          const updatedPower = [...formData.power];
+          updatedPower[index][field] = value;
+          setFormData({ ...formData, power: updatedPower });
+        } catch (error) {
+          console.error('Power input error:', error);
+        }
+      };
+
+      React.useEffect(() => {
+        try {
+          const { eventStartTime, eventEndTime } = formData;
+          if (eventStartTime && eventEndTime) {
+            const start = new Date(`1970-01-01T${eventStartTime}:00`);
+            const end = new Date(`1970-01-01T${eventEndTime}:00`);
+
+            if (end < start) {
+              end.setDate(end.getDate() + 1);
+            }
+
+            const diffMs = end - start;
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+            const duration = `${hours} hour${hours !== 1 ? 's' : ''}${minutes > 0 ? ` ${minutes} minute${minutes !== 1 ? 's' : ''}` : ''}`;
+            setFormData((prev) => ({ ...prev, eventDuration: duration.trim() }));
+          } else {
+            setFormData((prev) => ({ ...prev, eventDuration: '' }));
+          }
+        } catch (error) {
+          console.error('Duration calculation error:', error);
+        }
+      }, [formData.eventStartTime, formData.eventEndTime]);
+
+      const handleSubmit = (e) => {
+        try {
+          e.preventDefault();
+          console.log('Form Data:', formData);
+          alert('Form submitted successfully! Check console for form data.');
+        } catch (error) {
+          console.error('Submit error:', error);
+        }
+      };
+
+      const getFormattedDateTime = () => {
+        try {
+          const now = new Date();
+          const day = String(now.getDate()).padStart(2, '0');
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const year = now.getFullYear();
+          const hours = String(now.getHours()).padStart(2, '0');
+          const minutes = String(now.getMinutes()).padStart(2, '0');
+          return {
+            fileTimestamp: `${day}-${month}-${year}_${hours}-${minutes}`,
+            displayTimestamp: `${day}-${month}-${year} ${hours}:${minutes}`,
+          };
+        } catch (error) {
+          console.error('Date format error:', error);
+          return { fileTimestamp: 'error', displayTimestamp: 'error' };
+        }
+      };
+
+      const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        try {
+          const [year, month, day] = dateStr.split('-');
+          return `${day}-${month}-${year}`;
+        } catch (error) {
+          console.error('Date formatting error:', error);
+          return dateStr;
+        }
+      };
+
+      const loadImage = (url) => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          if (url.startsWith('http')) {
+            img.crossOrigin = 'Anonymous';
+          }
+          img.onload = () => {
+            console.log('Image loaded successfully:', url);
+            resolve(img);
+          };
+          img.onerror = (e) => {
+            console.error('Failed to load image:', url, e);
+            reject(new Error(`Failed to load image at ${url}: ${e.message}`));
+          };
+          img.src = url;
+        });
+      };
+
+      const generatePDF = async () => {
+        try {
+          if (!formData.eventName || !formData.date || !formData.channel || !formData.broadcastType) {
+            throw new Error('Missing required fields: Event Name, Date, Channel, or Broadcast Type');
+          }
+          if (formData.eventEngineer.length === 0) {
+            throw new Error('Please select at least one Event Engineer');
+          }
+          if (!window.jspdf || !window.jspdf.jsPDF) {
+            throw new Error('jsPDF not loaded. Check CDN or network connectivity.');
+          }
+
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4',
+          });
+
+          doc.setProperties({
+            title: `Network18 Event Report - ${formData.eventName}`,
+            subject: 'Event Report',
+            author: formData.createdBy || 'Network18',
+            keywords: 'event, report, network18',
+            creator: 'Network18 Event Report System',
+          });
+
+          const margin = 5;
+          let y = 10;
+          const pageWidth = doc.internal.pageSize.getWidth();
+          const lineHeight = 3;
+          const sectionSpacing = 4;
+
+          const { fileTimestamp, displayTimestamp } = getFormattedDateTime();
+
+          try {
+            const imageUrl = './NW18.png';
+            const img = await loadImage(imageUrl);
+            const imgWidth = 20;
+            const imgHeight = (img.height * imgWidth) / img.width;
+            doc.addImage(img, 'PNG', margin, y, imgWidth, imgHeight);
+          } catch (error) {
+            console.warn('Image loading failed:', error.message);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6);
+            doc.setTextColor(255, 0, 0);
+            doc.text('Network18 Logo', margin, y + 5);
+          }
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(10);
+          doc.setTextColor(0, 51, 102);
+          const headerText = `Network18 Event Report | ${displayTimestamp}`;
+          const headerWidth = doc.getTextWidth(headerText);
+          const headerX = (pageWidth - headerWidth) / 2;
+          doc.text(headerText, headerX, y + 5);
+          y += 10;
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(6);
+          if (formData.daySelection !== 'Select') {
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Day: ${formData.daySelection}`, margin, y);
+          }
+          if (formData.createdBy) {
+            doc.text(`Created By: ${formData.createdBy}`, pageWidth - margin - doc.getTextWidth(`Created By: ${formData.createdBy}`), y);
+          }
+          y += 5;
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(0, 51, 102);
+          doc.text('Event Details', margin, y);
+          y += 2;
+          doc.setDrawColor(0, 51, 102);
+          doc.setLineWidth(0.2);
+          doc.line(margin, y, pageWidth - margin, y);
+          y += 3;
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(6);
+
+          const eventDetails = [
+            { label: 'Event Name', value: formData.eventName },
+            { label: 'Date', value: formatDate(formData.date) },
+            { label: 'Channel', value: formData.channel },
+            { label: 'Location', value: formData.location },
+            { label: 'City', value: formData.city },
+            { label: 'Setup Type', value: formData.setupType.join(', ') || '' },
+            { label: 'Show Type', value: formData.showType },
+            { label: 'Show Setup', value: `Cam: ${formData.camera || ''} | Jib: ${formData.jimmyJib || ''}` },
+            { label: 'Broadcast', value: formData.broadcastType },
+            ...(formData.broadcastType === 'Live' ? [{ label: 'Live Platform', value: formData.livePlatform.join(', ') || '' }] : []),
+          ];
+
+          eventDetails.forEach((item, index) => {
+            const col = index % 2 === 0 ? margin : margin + 80;
+            const row = Math.floor(index / 2);
+            const text = `${item.label}: ${item.value || '-'}`;
+            const wrappedText = doc.splitTextToSize(text, 75);
+            doc.text(wrappedText, col, y + row * lineHeight);
+          });
+          y += Math.ceil(eventDetails.length / 2) * lineHeight + 3;
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(0, 51, 102);
+          doc.text('Setup & Timing', margin, y);
+          y += 2;
+          doc.line(margin, y, pageWidth - margin, y);
+          y += 3;
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(6);
+
+          const setupTimingDetails = [
+            { label: 'Setup Date', value: formatDate(formData.setupDate) },
+            { label: 'Start Time', value: formData.setupStartTime },
+            { label: 'End Time', value: formData.setupEndTime },
+            { label: 'Checking Done', value: formData.checkingDone },
+          ];
+
+          setupTimingDetails.forEach((item, index) => {
+            const col = index % 2 === 0 ? margin : margin + 80;
+            const row = Math.floor(index / 2);
+            doc.text(`${item.label}: ${item.value || '-'}`, col, y + row * lineHeight);
+          });
+          y += Math.ceil(setupTimingDetails.length / 2) * lineHeight + 3;
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(0, 51, 102);
+          doc.text('Team Details', margin, y);
+          y += 2;
+          doc.line(margin, y, pageWidth - margin, y);
+          y += 3;
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(6);
+
+          const teamDetails = [
+            { label: 'Event Engineer', value: formData.eventEngineer.join(', ') || '' },
+            { label: 'Show Producer', value: formData.showProducer || '' },
+            { label: 'Show DOP', value: formData.showDop || '' },
+            { label: 'Online Editor', value: formData.onlineEditor || '' },
+            { label: 'Electrical', value: formData.electrical || '' },
+            { label: 'Sound Engineer', value: formData.soundEngineer || '' },
+            { label: 'Production Control', value: formData.productionControl || '' },
+          ];
+
+          teamDetails.forEach((item, index) => {
+            const col = index % 2 === 0 ? margin : margin + 80;
+            const row = Math.floor(index / 2);
+            const text = `${item.label}: ${item.value || '-'}`;
+            const wrappedText = doc.splitTextToSize(text, 75);
+            doc.text(wrappedText, col, y + row * lineHeight);
+            if (item.label === 'Event Engineer' && wrappedText.length > 1) {
+              y += (wrappedText.length - 1) * lineHeight;
+            }
+          });
+          y += Math.ceil(teamDetails.length / 2) * lineHeight + 3;
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(0, 51, 102);
+          doc.text('Event Timing', margin, y);
+          y += 2;
+          doc.line(margin, y, pageWidth - margin, y);
+          y += 3;
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(6);
+
+          const eventTiming = [
+            { label: 'Feed Test Location', value: formData.feedTestLocation },
+            { label: 'Feed Test Time', value: formData.feedTestTime },
+            { label: 'Start Time', value: formData.eventStartTime },
+            { label: 'End Time', value: formData.eventEndTime },
+            { label: 'Duration', value: formData.eventDuration },
+          ];
+
+          eventTiming.forEach((item, index) => {
+            const col = index % 2 === 0 ? margin : margin + 80;
+            const row = Math.floor(index / 2);
+            doc.text(`${item.label}: ${item.value || '-'}`, col, y + row * lineHeight);
+          });
+          y += Math.ceil(eventTiming.length / 2) * lineHeight + 3;
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(0, 51, 102);
+          doc.text('Equipment', margin, y);
+          y += 2;
+          doc.line(margin, y, pageWidth - margin, y);
+          y += 3;
+
+          const hasHiredEquipment = formData.equipment.some(item => item.hired);
+          const equipmentHeaders = hasHiredEquipment
+            ? ['#', 'Equipment', 'Model', 'Qty', 'Install', 'Done', 'In-House', 'Hired', 'Vendor', 'Remarks', 'Status']
+            : ['#', 'Equipment', 'Model', 'Qty', 'Install', 'Done', 'In-House', 'Remarks', 'Status'];
+
+          const equipmentData = formData.equipment
+            .filter(item => item.modelNo || item.qty || item.installationTime || item.doneTime || item.inHouse || item.hired || item.remarks || item.status)
+            .map((item, index) => {
+              const baseRow = [
+                index + 1,
+                item.name || '',
+                item.modelNo || '',
+                item.qty || '',
+                item.installationTime || '',
+                item.doneTime || '',
+                item.inHouse ? 'Yes' : '',
+                item.remarks || '',
+                item.status || '',
+              ];
+              if (hasHiredEquipment) {
+                baseRow.splice(7, 0, item.hired ? 'Yes' : '');
+                baseRow.splice(8, 0, item.hired ? item.vendorName || '' : '');
+              }
+              return baseRow;
             });
 
-            const handleInputChange = (e) => {
-                try {
-                    const { name, value } = e.target;
-                    setFormData({ ...formData, [name]: value });
-                } catch (error) {
-                    console.error('Input change error:', error);
+          if (y + equipmentData.length * 3 > doc.internal.pageSize.getHeight() - 10) {
+            doc.setFontSize(5);
+          }
+
+          doc.autoTable({
+            startY: y,
+            head: [equipmentHeaders],
+            body: equipmentData,
+            theme: 'grid',
+            styles: {
+              fontSize: 6,
+              cellPadding: 0.5,
+              textColor: [0, 0, 0],
+              halign: 'left',
+              valign: 'middle',
+              overflow: 'linebreak',
+            },
+            headStyles: {
+              fillColor: [0, 51, 102],
+              textColor: [255, 255, 255],
+              halign: 'center',
+              fontSize: 6,
+              cellPadding: 0.5,
+            },
+            margin: { left: margin, right: margin },
+            tableWidth: pageWidth - (margin * 2),
+            columnStyles: hasHiredEquipment
+              ? {
+                  0: { cellWidth: 8 },
+                  1: { cellWidth: 25 },
+                  2: { cellWidth: 15 },
+                  3: { cellWidth: 8 },
+                  4: { cellWidth: 12 },
+                  5: { cellWidth: 12 },
+                  6: { cellWidth: 12 },
+                  7: { cellWidth: 12 },
+                  8: { cellWidth: 15 },
+                  9: { cellWidth: 20 },
+                  10: { cellWidth: 12 },
                 }
-            };
-
-            const handleSetupTypeRadio = (setup) => {
-                try {
-                    setFormData((prevFormData) => {
-                        if (prevFormData.setupType.includes(setup)) {
-                            return {
-                                ...prevFormData,
-                                setupType: []
-                            };
-                        }
-                        return {
-                            ...prevFormData,
-                            setupType: [setup]
-                        };
-                    });
-                } catch (error) {
-                    console.error('Setup type radio error:', error);
-                }
-            };
-
-            const handleClearSetupType = () => {
-                try {
-                    setFormData((prevFormData) => ({
-                        ...prevFormData,
-                        setupType: []
-                    }));
-                } catch (error) {
-                    console.error('Clear setup type error:', error);
-                }
-            };
-
-            const handleLivePlatformCheckbox = (platform) => {
-                try {
-                    setFormData((prevFormData) => {
-                        const currentPlatforms = prevFormData.livePlatform;
-                        if (currentPlatforms.includes(platform)) {
-                            return {
-                                ...prevFormData,
-                                livePlatform: currentPlatforms.filter(p => p !== platform),
-                            };
-                        } else {
-                            return {
-                                ...prevFormData,
-                                livePlatform: [...currentPlatforms, platform],
-                            };
-                        }
-                    });
-                } catch (error) {
-                    console.error('Live platform checkbox error:', error);
-                }
-            };
-
-            const handleEventEngineerCheckbox = (engineerName) => {
-                try {
-                    setFormData((prevFormData) => {
-                        const currentEngineers = prevFormData.eventEngineer;
-                        if (currentEngineers.includes(engineerName)) {
-                            return {
-                                ...prevFormData,
-                                eventEngineer: currentEngineers.filter(name => name !== engineerName),
-                            };
-                        } else {
-                            return {
-                                ...prevFormData,
-                                eventEngineer: [...currentEngineers, engineerName],
-                            };
-                        }
-                    });
-                } catch (error) {
-                    console.error('Event engineer checkbox error:', error);
-                }
-            };
-
-            const handleCustomEngineerChange = (e) => {
-                try {
-                    const value = e.target.value.trim();
-                    setFormData((prevFormData) => {
-                        const currentEngineers = prevFormData.eventEngineer.filter(
-                            (name) => ['Munendra Kumar Tyagi', 'Kamal Kishore', 'Rajesh Kumar', 'Virendra Singh'].includes(name)
-                        );
-                        if (value) {
-                            currentEngineers.push(value);
-                        }
-                        return {
-                            ...prevFormData,
-                            customEngineer: value,
-                            eventEngineer: currentEngineers,
-                        };
-                    });
-                } catch (error) {
-                    console.error('Custom engineer input error:', error);
-                }
-            };
-
-            const handleEquipmentCheckbox = (index, field) => {
-                try {
-                    const updatedEquipment = [...formData.equipment];
-                    updatedEquipment[index][field] = !updatedEquipment[index][field];
-                    if (field === 'hired' && !updatedEquipment[index][field]) {
-                        updatedEquipment[index].vendorName = '';
-                    }
-                    setFormData({ ...formData, equipment: updatedEquipment });
-                } catch (error) {
-                    console.error('Equipment checkbox error:', error);
-                }
-            };
-
-            const handleEquipmentInput = (index, field, value) => {
-                try {
-                    const updatedEquipment = [...formData.equipment];
-                    updatedEquipment[index][field] = value;
-                    setFormData({ ...formData, equipment: updatedEquipment });
-                } catch (error) {
-                    console.error('Equipment input error:', error);
-                }
-            };
-
-            const handleLiveSourceInput = (index, field, value) => {
-                try {
-                    const updatedLiveSource = [...formData.liveSource];
-                    if (field === 'value' && index <= 2) {
-                        const numValue = parseFloat(value);
-                        const hasTwoOrMoreDigits = value.match(/^\d{2,}$/);
-                        updatedLiveSource[index].value = !isNaN(numValue) && hasTwoOrMoreDigits ? `${numValue} Mbps` : value;
-                    } else if (field === 'value' && index === 3) {
-                        updatedLiveSource[index].value = value;
-                        updatedLiveSource[index].source = updatedLiveSource[index].unit;
-                    } else if (field === 'unit' && index === 3) {
-                        updatedLiveSource[index].unit = value;
-                        updatedLiveSource[index].source = value;
-                    } else if (field === 'notes') {
-                        updatedLiveSource[index].notes = value;
-                    } else {
-                        updatedLiveSource[index][field] = value;
-                    }
-                    setFormData({ ...formData, liveSource: updatedLiveSource });
-                } catch (error) {
-                    console.error('Live source input error:', error);
-                }
-            };
-
-            const handlePowerInput = (index, field, value) => {
-                try {
-                    const updatedPower = [...formData.power];
-                    updatedPower[index][field] = value;
-                    setFormData({ ...formData, power: updatedPower });
-                } catch (error) {
-                    console.error('Power input error:', error);
-                }
-            };
-
-            React.useEffect(() => {
-                try {
-                    const { eventStartTime, eventEndTime } = formData;
-                    if (eventStartTime && eventEndTime) {
-                        const start = new Date(`1970-01-01T${eventStartTime}:00`);
-                        const end = new Date(`1970-01-01T${eventEndTime}:00`);
-
-                        if (end < start) {
-                            end.setDate(end.getDate() + 1);
-                        }
-
-                        const diffMs = end - start;
-                        const hours = Math.floor(diffMs / (1000 * 60 * 60));
-                        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-                        const duration = `${hours} hour${hours !== 1 ? 's' : ''}${minutes > 0 ? ` ${minutes} minute${minutes !== 1 ? 's' : ''}` : ''}`;
-                        setFormData((prev) => ({ ...prev, eventDuration: duration.trim() }));
-                    } else {
-                        setFormData((prev) => ({ ...prev, eventDuration: '' }));
-                    }
-                } catch (error) {
-                    console.error('Duration calculation error:', error);
-                }
-            }, [formData.eventStartTime, formData.eventEndTime]);
-
-            const handleSubmit = (e) => {
-                try {
-                    e.preventDefault();
-                    console.log('Form Data:', formData);
-                    alert('Form submitted successfully! Check console for form data.');
-                } catch (error) {
-                    console.error('Submit error:', error);
-                }
-            };
-
-            const getFormattedDateTime = () => {
-                try {
-                    const now = new Date('2025-06-28T20:13:00+05:30');
-                    const day = String(now.getDate()).padStart(2, '0');
-                    const month = String(now.getMonth() + 1).padStart(2, '0');
-                    const year = now.getFullYear();
-                    const hours = String(now.getHours()).padStart(2, '0');
-                    const minutes = String(now.getMinutes()).padStart(2, '0');
-                    return {
-                        fileTimestamp: `${day}-${month}-${year}_${hours}-${minutes}`,
-                        displayTimestamp: `${day}-${month}-${year} ${hours}:${minutes}`
-                    };
-                } catch (error) {
-                    console.error('Date format error:', error);
-                    return { fileTimestamp: 'error', displayTimestamp: 'error' };
-                }
-            };
-
-            const formatDate = (dateStr) => {
-                if (!dateStr) return '';
-                try {
-                    const [year, month, day] = dateStr.split('-');
-                    return `${day}-${month}-${year}`;
-                } catch (error) {
-                    console.error('Date formatting error:', error);
-                    return dateStr;
-                }
-            };
-
-            const loadImage = (url) => {
-                return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    if (url.startsWith('http')) {
-                        img.crossOrigin = 'Anonymous';
-                    }
-                    img.onload = () => {
-                        console.log('Image loaded successfully:', url);
-                        resolve(img);
-                    };
-                    img.onerror = (e) => {
-                        console.error('Failed to load image:', url, e);
-                        reject(new Error(`Failed to load image at ${url}: ${e.message}`));
-                    };
-                    img.src = url;
-                });
-            };
-
-            const generatePDF = async () => {
-                try {
-                    if (!formData.eventName || !formData.date || !formData.channel || !formData.broadcastType) {
-                        alert('Please fill in Event Name, Date, Channel, and Broadcast Type.');
-                        return;
-                    }
-                    if (formData.eventEngineer.length === 0) {
-                        alert('Please select at least one Event Engineer.');
-                        return;
-                    }
-                    if (!window.jspdf || !window.jspdf.jsPDF) {
-                        alert('PDF library failed to load. Please check your internet connection and try again.');
-                        throw new Error('jsPDF not loaded. Check CDN or network connectivity.');
-                    }
-
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF({
-                        orientation: 'portrait',
-                        unit: 'mm',
-                        format: 'a2'
-                    });
-
-                    const margin = 15;
-                    let y = 20;
-                    const pageWidth = 420;
-                    const lineHeight = 6;
-
-                    const { fileTimestamp, displayTimestamp } = getFormattedDateTime();
-
-                    try {
-                        const imageUrl = './NW18.png';
-                        const img = await loadImage(imageUrl);
-                        const imgWidth = 40;
-                        const imgHeight = (img.height * imgWidth) / img.width;
-                        doc.addImage(img, 'PNG', margin, y - 10, imgWidth, imgHeight);
-                    } catch (error) {
-                        console.warn('Image loading failed:', error.message);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(12);
-                        doc.setTextColor(255, 0, 0);
-                        doc.text('Network18 Logo', margin, y);
-                    }
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(18);
-                    doc.setTextColor(0, 102, 204);
-                    const headerText = `Network18 Event Report | ${displayTimestamp}`;
-                    const headerWidth = doc.getTextWidth(headerText);
-                    const headerX = (pageWidth - headerWidth) / 2;
-                    doc.text(headerText, headerX, y);
-
-                    y += 20;
-
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12);
-                    if (formData.daySelection !== 'Select') {
-                        doc.setTextColor(0, 0, 0);
-                        doc.text('Day:', margin, y);
-                        doc.setFont('helvetica', 'bold');
-                        doc.setTextColor(100, 100, 100);
-                        doc.text(formData.daySelection, margin + doc.getTextWidth('Day: '), y);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setTextColor(0, 0, 0);
-                    }
-
-                    const rightText = [];
-                    if (formData.createdBy) {
-                        rightText.push(`Created By: ${formData.createdBy}`);
-                    }
-                    const rightTextCombined = rightText.join(' | ');
-                    const rightTextWidth = doc.getTextWidth(rightTextCombined);
-                    if (formData.createdBy) {
-                        doc.setTextColor(0, 0, 0);
-                        doc.text('Created By:', pageWidth - margin - rightTextWidth, y);
-                        doc.setFont('helvetica', 'bold');
-                        doc.setTextColor(100, 100, 100);
-                        doc.text(formData.createdBy, pageWidth - margin - rightTextWidth + doc.getTextWidth('Created By: '), y);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setTextColor(0, 0, 0);
-                    }
-
-                    y += 15;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
-                    doc.setTextColor(0);
-                    doc.text('Event Details', margin, y);
-                    y += 3;
-                    doc.line(margin, y, pageWidth - margin, y);
-                    y += 6;
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12);
-
-                    const eventDetails = [
-                        { label: 'Event Name', value: formData.eventName },
-                        { label: 'Date', value: formatDate(formData.date) },
-                        { label: 'Channel', value: formData.channel },
-                        { label: 'Location/Hotel Name', value: formData.location },
-                        { label: 'State/City', value: formData.city },
-                        { label: 'Setup Type', value: formData.setupType.join(', ') || '' },
-                        { label: 'Show Type', value: formData.showType },
-                        { 
-                            label: 'Show Setup', 
-                            value: `Camera: ${formData.camera || ''} | Jimmy Jib: ${formData.jimmyJib || ''}` 
-                        },
-                        { label: 'Broadcast Type', value: formData.broadcastType },
-                        ...(formData.broadcastType === 'Live' ? [{ label: 'Live Platform', value: formData.livePlatform.join(', ') || '' }] : [])
-                    ];
-
-                    eventDetails.forEach((item, index) => {
-                        const col = index % 2 === 0 ? 0 : 200;
-                        const row = Math.floor(index / 2);
-                        doc.setTextColor(0, 0, 0);
-                        doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
-                        if (item.value) {
-                            doc.setFont('helvetica', 'bold');
-                            doc.setTextColor(100, 100, 100);
-                            doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
-                            doc.setFont('helvetica', 'normal');
-                            doc.setTextColor(0, 0, 0);
-                        }
-                    });
-                    y += Math.ceil(eventDetails.length / 2) * lineHeight + 8;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
-                    doc.text('Setup Date and Timing', margin, y);
-                    y += 3;
-                    doc.line(margin, y, pageWidth - margin, y);
-                    y += 6;
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12);
-
-                    const setupTimingDetails = [
-                        { label: 'Setup Date', value: formatDate(formData.setupDate) },
-                        { label: 'Setup Start Time', value: formData.setupStartTime },
-                        { label: 'Setup End Time', value: formData.setupEndTime },
-                        { label: 'Checking Done', value: formData.checkingDone }
-                    ];
-
-                    setupTimingDetails.forEach((item, index) => {
-                        const col = index % 2 === 0 ? 0 : 200;
-                        const row = Math.floor(index / 2);
-                        doc.setTextColor(0, 0, 0);
-                        doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
-                        if (item.value) {
-                            doc.setFont('helvetica', 'bold');
-                            doc.setTextColor(100, 100, 100);
-                            doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
-                            doc.setFont('helvetica', 'normal');
-                            doc.setTextColor(0, 0, 0);
-                        }
-                    });
-                    y += Math.ceil(setupTimingDetails.length / 2) * lineHeight + 8;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
-                    doc.text('Team Details', margin, y);
-                    y += 3;
-                    doc.line(margin, y, pageWidth - margin, y);
-                    y += 6;
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12);
-
-                    const teamDetails = [
-                        { label: 'Event Engineer', value: formData.eventEngineer.join(', ') || '' },
-                        { label: 'Show Producer', value: formData.showProducer },
-                        { label: 'Show DOP', value: formData.showDop },
-                        { label: 'Online Editor', value: formData.onlineEditor },
-                        { label: 'Electrical', value: formData.electrical },
-                        { label: 'Sound Engineer', value: formData.soundEngineer },
-                        { label: 'Production Control', value: formData.productionControl }
-                    ];
-
-                    teamDetails.forEach((item, index) => {
-                        const col = index % 2 === 0 ? 0 : 200;
-                        const row = Math.floor(index / 2);
-                        doc.setTextColor(0, 0, 0);
-                        doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
-                        if (item.value) {
-                            doc.setFont('helvetica', 'bold');
-                            doc.setTextColor(100, 100, 100);
-                            doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
-                            doc.setFont('helvetica', 'normal');
-                            doc.setTextColor(0, 0, 0);
-                        }
-                    });
-                    y += Math.ceil(teamDetails.length / 2) * lineHeight + 8;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
-                    doc.text('Event Timing', margin, y);
-                    y += 3;
-                    doc.line(margin, y, pageWidth - margin, y);
-                    y += 6;
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12);
-
-                    const eventTiming = [
-                        { label: 'Feed Test Location', value: formData.feedTestLocation },
-                        { label: 'Feed Test Time', value: formData.feedTestTime },
-                        { label: 'Event Start Time', value: formData.eventStartTime },
-                        { label: 'Event End Time', value: formData.eventEndTime },
-                        { label: 'Event Duration', value: formData.eventDuration }
-                    ];
-
-                    eventTiming.forEach((item, index) => {
-                        const col = index % 2 === 0 ? 0 : 200;
-                        const row = Math.floor(index / 2);
-                        doc.setTextColor(0, 0, 0);
-                        doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
-                        if (item.value) {
-                            doc.setFont('helvetica', 'bold');
-                            doc.setTextColor(100, 100, 100);
-                            doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
-                            doc.setFont('helvetica', 'normal');
-                            doc.setTextColor(0, 0, 0);
-                        }
-                    });
-                    y += Math.ceil(eventTiming.length / 2) * lineHeight + 8;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(16);
-                    doc.text('Equipment', margin, y);
-                    y += 3;
-                    doc.line(margin, y, pageWidth - margin, y);
-                    y += 6;
-
-                    const hasHiredEquipment = formData.equipment.some(item => item.hired);
-                    const equipmentHeaders = hasHiredEquipment
-                        ? ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Hired', 'Vendor Name', 'Remarks', 'Status']
-                        : ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Remarks', 'Status'];
-
-                    const equipmentData = formData.equipment.map((item, index) => {
-                        const baseRow = [
-                            index + 1,
-                            item.name || '',
-                            item.modelNo || '',
-                            item.qty || '',
-                            item.installationTime || '',
-                            item.doneTime || '',
-                            item.inHouse ? 'Yes' : '',
-                            item.remarks || '',
-                            item.status || ''
-                        ];
-                        if (hasHiredEquipment) {
-                            baseRow.splice(7, 0, item.hired ? 'Yes' : '');
-                            baseRow.splice(8, 0, item.hired ? item.vendorName || '' : '');
-                        }
-                        return baseRow;
-                    });
-
-                    doc.autoTable({
-                        startY: y,
-                        head: [equipmentHeaders],
-                        body: equipmentData,
-                        theme: 'grid',
-                        styles: { 
-                            fontSize: 10,
-                            cellPadding: 2,
-                            textColor: [0, 0, 0],
-                            halign: 'left',
-                            valign: 'middle',
-                            fontStyle: 'bold'
-                        },
-                        headStyles: { 
-                            fillColor: [0, 102, 204],
-                            textColor: [255, 255, 255],
-                            halign: 'center',
-                            valign: 'middle'
-                        },
-                        margin: { left: margin, right: margin },
-                        tableWidth: pageWidth - (margin * 2)
-                    });
-                    y = doc.lastAutoTable.finalY + 6;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(16);
-                    doc.text('Live Source', margin, y);
-                    y += 3;
-                    doc.line(margin, y, pageWidth - margin, y);
-                    y += 6;
-
-                    doc.autoTable({
-                        startY: y,
-                        head: [['Sr.No.', 'Name', 'Available', 'Type', 'Bandwidth', 'Note', 'Status']],
-                        body: formData.liveSource.map((item, index) => [
-                            index + 1,
-                            item.name || '',
-                            item.available === 'Yes' ? 'Yes' : item.available === 'No' ? 'No' : '',
-                            item.source || '',
-                            item.value || '',
-                            item.notes || '',
-                            item.status || ''
-                        ]),
-                        theme: 'grid',
-                        styles: { 
-                            fontSize: 10,
-                            cellPadding: 2,
-                            textColor: [0, 0, 0],
-                            halign: 'left',
-                            valign: 'middle',
-                            fontStyle: 'bold'
-                        },
-                        headStyles: { 
-                            fillColor: [0, 102, 204],
-                            textColor: [255, 255, 255],
-                            halign: 'center',
-                            valign: 'middle'
-                        },
-                        margin: { left: margin, right: margin },
-                        tableWidth: pageWidth - (margin * 2)
-                    });
-                    y = doc.lastAutoTable.finalY + 6;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(16);
-                    doc.text('Electrical Power Source', margin, y);
-                    y += 3;
-                    doc.line(margin, y, pageWidth - margin, y);
-                    y += 6;
-
-                    doc.autoTable({
-                        startY: y,
-                        head: [['Sr.No.', 'Source', 'Available', 'kVA', 'Enter Value', 'Note', 'Status']],
-                        body: formData.power.map((item, index) => [
-                            index + 1,
-                            item.source || '',
-                            item.available || '',
-                            item.kVA || '',
-                            item.enterValue || '',
-                            item.note || '',
-                            item.status || ''
-                        ]),
-                        theme: 'grid',
-                        styles: { 
-                            fontSize: 10,
-                            cellPadding: 2,
-                            textColor: [0, 0, 0],
-                            halign: 'left',
-                            valign: 'middle',
-                            fontStyle: 'bold'
-                        },
-                        headStyles: { 
-                            fillColor: [0, 102, 204],
-                            textColor: [255, 255, 255],
-                            halign: 'center',
-                            valign: 'middle'
-                        },
-                        margin: { left: margin, right: margin },
-                        tableWidth: pageWidth - (margin * 2)
-                    });
-                    y = doc.lastAutoTable.finalY + 6;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(14);
-                    doc.text('Engineer Comments & Signature (Day 1)', margin, y);
-                    y += 3;
-                    doc.line(margin, y, pageWidth - margin, y);
-                    y += 6;
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12);
-
-                    const comments1 = doc.splitTextToSize(`Comments: ${formData.eventEngineerComments || ''}`, pageWidth - (margin * 2));
-                    doc.setTextColor(0, 0, 0);
-                    doc.text('Comments:', margin, y);
-                    if (formData.eventEngineerComments) {
-                        doc.setFont('helvetica', 'bold');
-                        doc.setTextColor(100, 100, 100);
-                        doc.text(formData.eventEngineerComments, margin + doc.getTextWidth('Comments: '), y);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setTextColor(0, 0, 0);
-                    }
-                    y += comments1.length * lineHeight + 6;
-
-                    doc.setTextColor(0, 0, 0);
-                    doc.text('Signature:', margin, y);
-                    if (formData.signature) {
-                        doc.setFont('helvetica', 'bold');
-                        doc.setTextColor(100, 100, 100);
-                        doc.text(formData.signature, margin + doc.getTextWidth('Signature: '), y);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setTextColor(0, 0, 0);
-                    }
-
-                    doc.text('Date:', margin + 200, y);
-                    if (formData.signatureDate) {
-                        doc.setFont('helvetica', 'bold');
-                        doc.setTextColor(100, 100, 100);
-                        doc.text(formatDate(formData.signatureDate), margin + 200 + doc.getTextWidth('Date: '), y);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setTextColor(0, 0, 0);
-                    }
-                    y += 12;
-
-                    if (isSecondDayDetailsVisible) {
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(14);
-                        doc.text('Second Day Details', margin, y);
-                        y += 3;
-                        doc.line(margin, y, pageWidth - margin, y);
-                        y += 6;
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(12);
-
-                        const secondDayDetails = [
-                            { label: 'Date', value: formatDate(formData.secondDate) },
-                            { label: 'Checking Done', value: formData.secondCheckingDone },
-                            { label: 'Feed Test Location', value: formData.secondFeedTestLocation },
-                            { label: 'Feed Test Time', value: formData.secondFeedTestTime },
-                            { label: 'Event Duration', value: formData.secondEventDuration }
-                        ];
-
-                        secondDayDetails.forEach((item, index) => {
-                            const col = index % 2 === 0 ? 0 : 200;
-                            const row = Math.floor(index / 2);
-                            doc.setTextColor(0, 0, 0);
-                            doc.text(`${item.label}:`, margin + col, y + row * lineHeight);
-                            if (item.value) {
-                                doc.setFont('helvetica', 'bold');
-                                doc.setTextColor(100, 100, 100);
-                                doc.text(item.value, margin + col + doc.getTextWidth(`${item.label}: `), y + row * lineHeight);
-                                doc.setFont('helvetica', 'normal');
-                                doc.setTextColor(0, 0, 0);
-                            }
-                        });
-                        y += Math.ceil(secondDayDetails.length / 2) * lineHeight + 6;
-
-                        const comments2 = doc.splitTextToSize(`Comments: ${formData.secondEventEngineerComments || ''}`, pageWidth - (margin * 2));
-                        doc.setTextColor(0, 0, 0);
-                        doc.text('Comments:', margin, y);
-                        if (formData.secondEventEngineerComments) {
-                            doc.setFont('helvetica', 'bold');
-                            doc.setTextColor(100, 100, 100);
-                            doc.text(formData.secondEventEngineerComments, margin + doc.getTextWidth('Comments: '), y);
-                            doc.setFont('helvetica', 'normal');
-                            doc.setTextColor(0, 0, 0);
-                        }
-                        y += comments2.length * lineHeight + 6;
-
-                        doc.setTextColor(0, 0, 0);
-                        doc.text('Signature:', margin, y);
-                        if (formData.secondSignature) {
-                            doc.setFont('helvetica', 'bold');
-                            doc.setTextColor(100, 100, 100);
-                            doc.text(formData.secondSignature, margin + doc.getTextWidth('Signature: '), y);
-                            doc.setFont('helvetica', 'normal');
-                            doc.setTextColor(0, 0, 0);
-                        }
-
-                        doc.text('Date:', margin + 200, y);
-                        if (formData.secondSignatureDate) {
-                            doc.setFont('helvetica', 'bold');
-                            doc.setTextColor(100, 100, 100);
-                            doc.text(formatDate(formData.secondSignatureDate), margin + 200 + doc.getTextWidth('Date: '), y);
-                            doc.setFont('helvetica', 'normal');
-                            doc.setTextColor(0, 0, 0);
-                        }
-                    }
-
-                    console.log('PDF generated successfully');
-                    doc.save(`Network18_Event_Report_${fileTimestamp}.pdf`);
-                } catch (error) {
-                    console.error('PDF generation error:', error.stack);
-                    alert('Failed to generate PDF: ' + error.message);
-                }
-            };
-
-            const generateExcel = async () => {
-                try {
-                    if (!window.XLSX) {
-                        await loadXLSX();
-                    }
-
-                    if (!window.XLSX) {
-                        throw new Error('XLSX library failed to load');
-                    }
-
-                    if (!formData.eventName || !formData.date || !formData.channel || !formData.broadcastType) {
-                        alert('Please fill in Event Name, Date, Channel, and Broadcast Type.');
-                        return;
-                    }
-                    if (formData.eventEngineer.length === 0) {
-                        alert('Please select at least one Event Engineer.');
-                        return;
-                    }
-
-                    console.log('Starting Excel generation...', formData);
-                    const wb = XLSX.utils.book_new();
-                    const hasHiredEquipment = formData.equipment.some(item => item.hired);
-                    const equipmentHeaders = hasHiredEquipment
-                        ? ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Hired', 'Vendor Name', 'Remarks', 'Status']
-                        : ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Remarks', 'Status'];
-
-                    const equipmentData = formData.equipment.map((item, index) => {
-                        const baseRow = [
-                            index + 1,
-                            item.name || '',
-                            item.modelNo || '',
-                            item.qty || '',
-                            item.installationTime || '',
-                            item.doneTime || '',
-                            item.inHouse ? 'Yes' : '',
-                            item.remarks || '',
-                            item.status || ''
-                        ];
-                        if (hasHiredEquipment) {
-                            baseRow.splice(7, 0, item.hired ? 'Yes' : '');
-                            baseRow.splice(8, 0, item.hired ? item.vendorName || '' : '');
-                        }
-                        return baseRow;
-                    });
-
-                    const wsData = [
-                        ['Network 18 Event Report'],
-                        ['Day Selection', formData.daySelection !== 'Select' ? formData.daySelection : null],
-                        ['Created By', formData.createdBy || null],
-                        ['Event Name', formData.eventName],
-                        ['Date', formData.date ? formatDate(formData.date) : ''],
-                        ['Channel', formData.channel],
-                        ['Location/Hotel Name', formData.location],
-                        ['State/City', formData.city],
-                        ['Setup Type', formData.setupType.join(', ') || null],
-                        ['Show Type', formData.showType],
-                        ['Show Setup', `Camera: ${formData.camera || ''} | Jimmy Jib: ${formData.jimmyJib || ''}`],
-                        ['Broadcast Type', formData.broadcastType],
-                        ['Live Platform', formData.broadcastType === 'Live' ? formData.livePlatform.join(', ') : 'N/A'],
-                        [],
-                        ['Setup Date and Timing'],
-                        ['Setup Date', formData.setupDate ? formatDate(formData.setupDate) : ''],
-                        ['Setup Start Time', formData.setupStartTime],
-                        ['Setup End Time', formData.setupEndTime],
-                        ['Checking Done', formData.checkingDone],
-                        [],
-                        ['Team Details'],
-                        ['Event Engineer', formData.eventEngineer.join(', ') || null],
-                        ['Show Producer', formData.showProducer],
-                        ['Show DOP', formData.showDop],
-                        ['Online Editor', formData.onlineEditor],
-                        ['Electrical', formData.electrical],
-                        ['Sound Engineer', formData.soundEngineer],
-                        ['Production Control', formData.productionControl],
-                        [],
-                        ['Event Timing'],
-                        ['Feed Test Location', formData.feedTestLocation],
-                        ['Feed Test Time', formData.feedTestTime],
-                        ['Event Start Time', formData.eventStartTime],
-                        ['Event End Time', formData.eventEndTime],
-                        ['Event Duration', formData.eventDuration],
-                        [],
-                        ['Equipment'],
-                        equipmentHeaders,
-                        ...equipmentData,
-                        [],
-                        ['Live Source'],
-                        ['Sr.No.', 'Name', 'Available', 'Type', 'Bandwidth', 'Note', 'Status'],
-                        ...formData.liveSource.map((item, index) => [
-                            index + 1,
-                            item.name || '',
-                            item.available || '',
-                            item.source || '',
-                            item.value || '',
-                            item.notes || '',
-                            item.status || ''
-                        ]),
-                        [],
-                        ['Electrical Power Source'],
-                        ['Sr.No.', 'Source', 'Available', 'kVA', 'Enter Value', 'Note', 'Status'],
-                        ...formData.power.map((item, index) => [
-                            index + 1,
-                            item.source || '',
-                            item.available || '',
-                            item.kVA || '',
-                            item.enterValue || '',
-                            item.note || '',
-                            item.status || ''
-                        ]),
-                        [],
-                        ['Engineer Comments & Signature (Day 1)'],
-                        ['Comments', formData.eventEngineerComments],
-                        ['Signature', formData.signature],
-                        ['Date', formData.signatureDate ? formatDate(formData.signatureDate) : '']
-                    ];
-
-                    if (formData.daySelection === '2' || formData.secondDate || formData.secondCheckingDone || formData.secondFeedTestLocation || formData.secondFeedTestTime || formData.secondEventDuration || formData.secondEventEngineerComments || formData.secondSignature || formData.secondSignatureDate) {
-                        wsData.push(
-                            [],
-                            ['Second Day Details'],
-                            ['Date', formData.secondDate ? formatDate(formData.secondDate) : ''],
-                            ['Checking Done', formData.secondCheckingDone],
-                            ['Feed Test Location', formData.secondFeedTestLocation],
-                            ['Feed Test Time', formData.secondFeedTestTime],
-                            ['Event Duration', formData.secondEventDuration],
-                            ['Comments', formData.secondEventEngineerComments],
-                            ['Signature', formData.secondSignature],
-                            ['Date', formData.secondSignatureDate ? formatDate(formData.secondSignatureDate) : '']
-                        );
-                    }
-
-                    const ws = XLSX.utils.aoa_to_sheet(wsData);
-                    XLSX.utils.book_append_sheet(wb, ws, 'Event Report');
-                    const { fileTimestamp } = getFormattedDateTime();
-                    console.log('Excel generated successfully');
-                    XLSX.writeFile(wb, `Network18_Event_Report_${fileTimestamp}.xlsx`);
-                } catch (error) {
-                    console.error('Excel generation error:', error.stack);
-                    alert('Failed to generate Excel: ' + error.message);
-                }
-            };
-
-            const loadXLSX = () => {
-                return new Promise((resolve, reject) => {
-                    if (window.XLSX) return resolve();
-                    
-                    const script = document.createElement('script');
-                    script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
-                    script.onload = resolve;
-                    script.onerror = reject;
-                    document.head.appendChild(script);
-                });
-            };
-
-            const isSecondDayDetailsVisible = formData.daySelection === '2' ||
-                formData.secondDate ||
-                formData.secondCheckingDone ||
-                formData.secondFeedTestLocation ||
-                formData.secondFeedTestTime ||
-                formData.secondEventDuration ||
-                formData.secondEventEngineerComments ||
-                formData.secondSignature ||
-                formData.secondSignatureDate;
-
-            return (
-                <div className="max-w-full mx-auto p-8 bg-gray-50 rounded-xl shadow-lg mt-4 border border-gray-200" style={{ maxWidth: '90vw' }}>
-                    <div className="flex justify-between items-center mb-8">
-                        <div>
-                            <img
-                                src="./NW18.png"
-                                alt="Network18 Logo"
-                                className="h-12"
-                                style={{ marginTop: '8px' }}
+              : {
+                  0: { cellWidth: 8 },
+                  1: { cellWidth: 30 },
+                  2: { cellWidth: 20 },
+                  3: { cellWidth: 12 },
+                  4: { cellWidth: 15 },
+                  5: { cellWidth: 15 },
+                  6: { cellWidth: 15 },
+                  7: { cellWidth: 25 },
+                  8: { cellWidth: 15 },
+                },
+          });
+          y = doc.lastAutoTable.finalY + 3;
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(0, 51, 102);
+          doc.text('Live Source', margin, y);
+          y += 2;
+          doc.line(margin, y, pageWidth - margin, y);
+          y += 3;
+
+          doc.autoTable({
+            startY: y,
+            head: [['#', 'Name', 'Avail', 'Type', 'BW', 'Note', 'Status']],
+            body: formData.liveSource.map((item, index) => [
+              index + 1,
+              item.name || '',
+              item.available === 'Yes' ? 'Yes' : item.available === 'No' ? 'No' : '',
+              item.source || item.unit || '',
+              item.value || '',
+              item.notes || '',
+              item.status || '',
+            ]),
+            theme: 'grid',
+            styles: {
+              fontSize: 6,
+              cellPadding: 0.5,
+              textColor: [0, 0, 0],
+              halign: 'left',
+              valign: 'middle',
+            },
+            headStyles: {
+              fillColor: [0, 51, 102],
+              textColor: [255, 255, 255],
+              halign: 'center',
+              fontSize: 6,
+              cellPadding: 0.5,
+            },
+            margin: { left: margin, right: margin },
+            tableWidth: pageWidth - (margin * 2),
+            columnStyles: {
+              0: { cellWidth: 8 },
+              1: { cellWidth: 25 },
+              2: { cellWidth: 15 },
+              3: { cellWidth: 15 },
+              4: { cellWidth: 15 },
+              5: { cellWidth: 35 },
+              6: { cellWidth: 15 },
+            },
+          });
+          y = doc.lastAutoTable.finalY + 3;
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(0, 51, 102);
+          doc.text('Power Source', margin, y);
+          y += 2;
+          doc.line(margin, y, pageWidth - margin, y);
+          y += 3;
+
+          doc.autoTable({
+            startY: y,
+            head: [['#', 'Source', 'Avail', 'kVA', 'Value', 'Note', 'Status']],
+            body: formData.power.map((item, index) => [
+              index + 1,
+              item.source || '',
+              item.available || '',
+              item.kVA || '',
+              item.enterValue || '',
+              item.note || '',
+              item.status || '',
+            ]),
+            theme: 'grid',
+            styles: {
+              fontSize: 6,
+              cellPadding: 0.5,
+              textColor: [0, 0, 0],
+              halign: 'left',
+              valign: 'middle',
+            },
+            headStyles: {
+              fillColor: [0, 51, 102],
+              textColor: [255, 255, 255],
+              halign: 'center',
+              fontSize: 6,
+              cellPadding: 0.5,
+            },
+            margin: { left: margin, right: margin },
+            tableWidth: pageWidth - (margin * 2),
+            columnStyles: {
+              0: { cellWidth: 8 },
+              1: { cellWidth: 25 },
+              2: { cellWidth: 15 },
+              3: { cellWidth: 15 },
+              4: { cellWidth: 15 },
+              5: { cellWidth: 35 },
+              6: { cellWidth: 15 },
+            },
+          });
+          y = doc.lastAutoTable.finalY + 3;
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(0, 51, 102);
+          doc.text('Comments & Signature (Day 1)', margin, y);
+          y += 2;
+          doc.line(margin, y, pageWidth - margin, y);
+          y += 3;
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(6);
+
+          if (formData.eventEngineerComments) {
+            const comments = doc.splitTextToSize(`Comments: ${formData.eventEngineerComments}`, pageWidth - (margin * 2));
+            doc.text(comments, margin, y);
+            y += comments.length * lineHeight;
+          }
+          doc.text(`Signature: ${formData.signature || '-'} | Date: ${formatDate(formData.signatureDate) || '-'}`, margin, y);
+          y += 5;
+
+          const isSecondDayDetailsVisible = formData.daySelection === '2' ||
+            formData.secondDate ||
+            formData.secondCheckingDone ||
+            formData.secondFeedTestLocation ||
+            formData.secondFeedTestTime ||
+            formData.secondEventDuration ||
+            formData.secondEventEngineerComments ||
+            formData.secondSignature ||
+            formData.secondSignatureDate;
+
+          if (isSecondDayDetailsVisible) {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(0, 51, 102);
+            doc.text('Second Day Details', margin, y);
+            y += 2;
+            doc.line(margin, y, pageWidth - margin, y);
+            y += 3;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6);
+
+            const secondDayDetails = [
+              { label: 'Date', value: formatDate(formData.secondDate) },
+              { label: 'Checking Done', value: formData.secondCheckingDone },
+              { label: 'Feed Test Location', value: formData.secondFeedTestLocation },
+              { label: 'Feed Test Time', value: formData.secondFeedTestTime },
+              { label: 'Duration', value: formData.secondEventDuration },
+            ];
+
+            secondDayDetails.forEach((item, index) => {
+              const col = index % 2 === 0 ? margin : margin + 80;
+              const row = Math.floor(index / 2);
+              doc.text(`${item.label}: ${item.value || '-'}`, col, y + row * lineHeight);
+            });
+            y += Math.ceil(secondDayDetails.length / 2) * lineHeight + 2;
+
+            if (formData.secondEventEngineerComments) {
+              const comments = doc.splitTextToSize(`Comments: ${formData.secondEventEngineerComments}`, pageWidth - (margin * 2));
+              doc.text(comments, margin, y);
+              y += comments.length * lineHeight;
+            }
+            doc.text(`Signature: ${formData.secondSignature || '-'} | Date: ${formatDate(formData.secondSignatureDate) || '-'}`, margin, y);
+          }
+
+          doc.setFontSize(6);
+          doc.setTextColor(100, 100, 100);
+          doc.text('Network18 Event Report System - Confidential', pageWidth / 2, doc.internal.pageSize.getHeight() - 5, { align: 'center' });
+
+          console.log('PDF generated successfully');
+          doc.save(`Network18_Event_Report_${formData.eventName.replace(/ /g, '_')}_${fileTimestamp}.pdf`);
+        } catch (error) {
+          console.error('PDF generation error:', error.stack);
+          alert(`Failed to generate PDF: ${error.message}`);
+        }
+      };
+
+      const generateExcel = async () => {
+        try {
+          if (!window.XLSX) {
+            await loadXLSX();
+          }
+
+          if (!window.XLSX) {
+            throw new Error('XLSX library failed to load');
+          }
+
+          if (!formData.eventName || !formData.date || !formData.channel || !formData.broadcastType) {
+            throw new Error('Missing required fields: Event Name, Date, Channel, or Broadcast Type');
+          }
+          if (formData.eventEngineer.length === 0) {
+            throw new Error('Please select at least one Event Engineer');
+          }
+
+          console.log('Starting Excel generation...', formData);
+          const wb = XLSX.utils.book_new();
+          const hasHiredEquipment = formData.equipment.some(item => item.hired);
+          const equipmentHeaders = hasHiredEquipment
+            ? ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Hired', 'Vendor Name', 'Remarks', 'Status']
+            : ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Remarks', 'Status'];
+
+          const equipmentData = formData.equipment
+            .filter(item => item.modelNo || item.qty || item.installationTime || item.doneTime || item.inHouse || item.hired || item.remarks || item.status)
+            .map((item, index) => {
+              const baseRow = [
+                index + 1,
+                item.name || '',
+                item.modelNo || '',
+                item.qty || '',
+                item.installationTime || '',
+                item.doneTime || '',
+                item.inHouse ? 'Yes' : '',
+                item.remarks || '',
+                item.status || '',
+              ];
+              if (hasHiredEquipment) {
+                baseRow.splice(7, 0, item.hired ? 'Yes' : '');
+                baseRow.splice(8, 0, item.hired ? item.vendorName || '' : '');
+              }
+              return baseRow;
+            });
+
+          const wsData = [
+            ['Network 18 Event Report'],
+            ['Day Selection', formData.daySelection !== 'Select' ? formData.daySelection : null],
+            ['Created By', formData.createdBy || null],
+            ['Event Name', formData.eventName],
+            ['Date', formData.date ? formatDate(formData.date) : ''],
+            ['Channel', formData.channel],
+            ['Location/Hotel Name', formData.location],
+            ['State/City', formData.city],
+            ['Setup Type', formData.setupType.join(', ') || null],
+            ['Show Type', formData.showType],
+            ['Show Setup', `Camera: ${formData.camera || ''} | Jimmy Jib: ${formData.jimmyJib || ''}`],
+            ['Broadcast Type', formData.broadcastType],
+            ['Live Platform', formData.broadcastType === 'Live' ? formData.livePlatform.join(', ') : 'N/A'],
+            [],
+            ['Setup Date and Timing'],
+            ['Setup Date', formData.setupDate ? formatDate(formData.setupDate) : ''],
+            ['Setup Start Time', formData.setupStartTime],
+            ['Setup End Time', formData.setupEndTime],
+            ['Checking Done', formData.checkingDone],
+            [],
+            ['Team Details'],
+            ['Event Engineer', formData.eventEngineer.join(', ') || null],
+            ['Show Producer', formData.showProducer],
+            ['Show DOP', formData.showDop],
+            ['Online Editor', formData.onlineEditor],
+            ['Electrical', formData.electrical],
+            ['Sound Engineer', formData.soundEngineer],
+            ['Production Control', formData.productionControl],
+            [],
+            ['Event Timing'],
+            ['Feed Test Location', formData.feedTestLocation],
+            ['Feed Test Time', formData.feedTestTime],
+            ['Event Start Time', formData.eventStartTime],
+            ['Event End Time', formData.eventEndTime],
+            ['Event Duration', formData.eventDuration],
+            [],
+            ['Equipment'],
+            equipmentHeaders,
+            ...equipmentData,
+            [],
+            ['Live Source'],
+            ['Sr.No.', 'Name', 'Available', 'Type', 'Bandwidth', 'Note', 'Status'],
+            ...formData.liveSource.map((item, index) => [
+              index + 1,
+              item.name || '',
+              item.available || '',
+              item.source || '',
+              item.value || '',
+              item.notes || '',
+              item.status || '',
+            ]),
+            [],
+            ['Electrical Power Source'],
+            ['Sr.No.', 'Source', 'Available', 'kVA', 'Enter Value', 'Note', 'Status'],
+            ...formData.power.map((item, index) => [
+              index + 1,
+              item.source || '',
+              item.available || '',
+              item.kVA || '',
+              item.enterValue || '',
+              item.note || '',
+              item.status || '',
+            ]),
+            [],
+            ['Engineer Comments & Signature (Day 1)'],
+            ['Comments', formData.eventEngineerComments],
+            ['Signature', formData.signature],
+            ['Date', formData.signatureDate ? formatDate(formData.signatureDate) : ''],
+          ];
+
+          if (isSecondDayDetailsVisible) {
+            wsData.push(
+              [],
+              ['Second Day Details'],
+              ['Date', formData.secondDate ? formatDate(formData.secondDate) : ''],
+              ['Checking Done', formData.secondCheckingDone],
+              ['Feed Test Location', formData.secondFeedTestLocation],
+              ['Feed Test Time', formData.secondFeedTestTime],
+              ['Event Duration', formData.secondEventDuration],
+              ['Comments', formData.secondEventEngineerComments],
+              ['Signature', formData.secondSignature],
+              ['Date', formData.secondSignatureDate ? formatDate(formData.secondSignatureDate) : ''],
+            );
+          }
+
+          const ws = XLSX.utils.aoa_to_sheet(wsData);
+          const wscols = [
+            { wch: 5 },
+            { wch: 20 },
+            { wch: 15 },
+            { wch: 10 },
+            { wch: 20 },
+            { wch: 15 },
+            { wch: 10 },
+            { wch: 10 },
+            { wch: 20 },
+            { wch: 30 },
+            { wch: 15 },
+          ];
+          ws['!cols'] = wscols;
+
+          XLSX.utils.book_append_sheet(wb, ws, 'Event Report');
+          const { fileTimestamp } = getFormattedDateTime();
+          console.log('Excel generated successfully');
+          XLSX.writeFile(wb, `Network18_Event_Report_${formData.eventName.replace(/ /g, '_')}_${fileTimestamp}.xlsx`);
+        } catch (error) {
+          console.error('Excel generation error:', error.stack);
+          alert(`Failed to generate Excel: ${error.message}`);
+        }
+      };
+
+      const loadXLSX = () => {
+        return new Promise((resolve, reject) => {
+          if (window.XLSX) return resolve();
+
+          const script = document.createElement('script');
+          script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      };
+
+      const isSecondDayDetailsVisible = formData.daySelection === '2' ||
+        formData.secondDate ||
+        formData.secondCheckingDone ||
+        formData.secondFeedTestLocation ||
+        formData.secondFeedTestTime ||
+        formData.secondEventDuration ||
+        formData.secondEventEngineerComments ||
+        formData.secondSignature ||
+        formData.secondSignatureDate;
+
+      return (
+        <div className="max-w-full mx-auto p-4 md:p-8 bg-gray-50">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-md">
+            <div className="mb-4 md:mb-0">
+              <img src="./NW18.png" alt="Network18 Logo" className="h-12" />
+            </div>
+            <div className="text-center">
+              <h1 className="text-2xl md:text-3xl font-bold text-network18-blue">
+                Network 18 Event Report
+              </h1>
+            </div>
+            <div className="mt-4 md:mt-0">
+              <button onClick={generatePDF} className="btn-primary px-4 py-2 rounded-lg mr-2">
+                Generate PDF
+              </button>
+              <button onClick={generateExcel} className="btn-secondary px-4 py-2 rounded-lg">
+                Generate Excel
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+            <a href="index.html" className="glass-effect text-white px-4 py-2 rounded-lg mb-4 md:mb-0 flex items-center">
+              <span className="mr-2">🏠</span> Home
+            </a>
+            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+              <div>
+                <label htmlFor="daySelection" className="mr-2 text-gray-700">Day:</label>
+                <select
+                  name="daySelection"
+                  value={formData.daySelection}
+                  onChange={handleInputChange}
+                  className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="Select">Select</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="createdBy" className="mr-2 text-gray-700">Created By:</label>
+                <select
+                  name="createdBy"
+                  value={formData.createdBy}
+                  onChange={handleInputChange}
+                  className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select</option>
+                  <option value="Tyagi">Tyagi</option>
+                  <option value="Kishor">Kishor</option>
+                  <option value="Rajesh">Rajesh</option>
+                  <option value="Virender">Virender</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="form-section p-4 md:p-6">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4">Event Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Name*</label>
+                  <input
+                    type="text"
+                    name="eventName"
+                    value={formData.eventName}
+                    onChange={handleInputChange}
+                    placeholder="Event Name"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date*</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Channel*</label>
+                  <select
+                    name="channel"
+                    value={formData.channel}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                    required
+                  >
+                    <option value="">Select Channel</option>
+                    <option value="Network 18">Network 18</option>
+                    <option value="News18 India">News18 India</option>
+                    <option value="CNN News 18">CNN News 18</option>
+                    <option value="CNBC TV18">CNBC TV18</option>
+                    <option value="CNBC Awaaz">CNBC Awaaz</option>
+                    <option value="Money Control">Money Control</option>
+                    <option value="First Post">First Post</option>
+                    <option value="Forbes">Forbes</option>
+                    <option value="News 18 /UP UK">News 18 /UP UK</option>
+                    <option value="News 18 Rajasthan">News 18 Rajasthan</option>
+                    <option value="News 18 Bihar /Jharkhand">News 18 Bihar /Jharkhand</option>
+                    <option value="News 18 Punjab">News 18 Punjab</option>
+                    <option value="News 18 MP/Chhattisgarh">News 18 MP/Chhattisgarh</option>
+                    <option value="News 18 JKLHH">News 18 JKLHH</option>
+                    <option value="News18 Odia">News18 Odia</option>
+                    <option value="News18 Bangla">News18 Bangla</option>
+                    <option value="News18 a/north east">News18 a/north east</option>
+                    <option value="News18 Malayalam">News18 Malayalam</option>
+                    <option value="News18 Kannada">News18 Kannada</option>
+                    <option value="News18 Tamilnadu">News18 Tamilnadu</option>
+                    <option value="News 18 Kerala">News 18 Kerala</option>
+                    <option value="News 18 Gujrat">News 18 Gujrat</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Broadcast Type*</label>
+                  <select
+                    name="broadcastType"
+                    value={formData.broadcastType}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                    required
+                  >
+                    <option value="">Select Broadcast Type</option>
+                    <option value="Live">Live</option>
+                    <option value="Recording">Recording</option>
+                  </select>
+                </div>
+                {formData.broadcastType === 'Live' && (
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Live Platform</label>
+                    <div className="flex flex-wrap gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.livePlatform.includes('Digital')}
+                          onChange={() => handleLivePlatformCheckbox('Digital')}
+                          className="h-4 w-4 text-blue-600 rounded mr-2"
+                        />
+                        Digital
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.livePlatform.includes('TV')}
+                          onChange={() => handleLivePlatformCheckbox('TV')}
+                          className="h-4 w-4 text-blue-600 rounded mr-2"
+                        />
+                        TV
+                      </label>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Location/Hotel Name</label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    placeholder="Location/Hotel Name"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">State/City</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    placeholder="State/City"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Setup Type</label>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex space-x-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="setupType"
+                          value="BNC"
+                          checked={formData.setupType[0] === 'BNC'}
+                          onChange={() => handleSetupTypeRadio('BNC')}
+                          className="h-4 w-4 text-blue-600 rounded mr-2"
+                        />
+                        BNC
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="setupType"
+                          value="TRIAX"
+                          checked={formData.setupType[0] === 'TRIAX'}
+                          onChange={() => handleSetupTypeRadio('TRIAX')}
+                          className="h-4 w-4 text-blue-600 rounded mr-2"
+                        />
+                        TRIAX
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleClearSetupType}
+                      className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200"
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Show Type</label>
+                  <select
+                    name="showType"
+                    value={formData.showType}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  >
+                    <option value="">Select Show Type</option>
+                    <option value="Intellectual Property (IP)">Intellectual Property (IP)</option>
+                    <option value="News">News</option>
+                    <option value="Focus">Focus</option>
+                    <option value="Media Partnership">Media Partnership</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Camera</label>
+                  <input
+                    type="text"
+                    name="camera"
+                    value={formData.camera}
+                    onChange={handleInputChange}
+                    placeholder="Camera"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Jimmy Jib</label>
+                  <input
+                    type="text"
+                    name="jimmyJib"
+                    value={formData.jimmyJib}
+                    onChange={handleInputChange}
+                    placeholder="Jimmy Jib"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="form-section p-4 md:p-6">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4">Setup Date and Timing</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Setup Date</label>
+                  <input
+                    type="date"
+                    name="setupDate"
+                    value={formData.setupDate}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Setup Start Time</label>
+                  <input
+                    type="time"
+                    name="setupStartTime"
+                    value={formData.setupStartTime}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Setup End Time</label>
+                  <input
+                    type="time"
+                    name="setupEndTime"
+                    value={formData.setupEndTime}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Checking Done</label>
+                  <input
+                    type="time"
+                    name="checkingDone"
+                    value={formData.checkingDone}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="form-section p-4 md:p-6">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4">Team Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Engineer*</label>
+                  <div className="flex flex-wrap gap-4">
+                    {['Munendra Kumar Tyagi', 'Kamal Kishore', 'Rajesh Kumar', 'Virendra Singh'].map((engineer) => (
+                      <label key={engineer} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.eventEngineer.includes(engineer)}
+                          onChange={() => handleEventEngineerCheckbox(engineer)}
+                          className="h-4 w-4 text-blue-600 rounded mr-2"
+                        />
+                        {engineer}
+                      </label>
+                    ))}
+                    <input
+                      type="text"
+                      name="customEngineer"
+                      value={formData.customEngineer}
+                      onChange={handleCustomEngineerChange}
+                      placeholder="Custom Engineer"
+                      className="p-2 border border-gray-300 rounded-lg w-48"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Show Producer</label>
+                  <input
+                    type="text"
+                    name="showProducer"
+                    value={formData.showProducer}
+                    onChange={handleInputChange}
+                    placeholder="Show Producer"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Show DOP</label>
+                  <input
+                    type="text"
+                    name="showDop"
+                    value={formData.showDop}
+                    onChange={handleInputChange}
+                    placeholder="Show DOP"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Online Editor</label>
+                  <input
+                    type="text"
+                    name="onlineEditor"
+                    value={formData.onlineEditor}
+                    onChange={handleInputChange}
+                    placeholder="Online Editor"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Electrical</label>
+                  <input
+                    type="text"
+                    name="electrical"
+                    value={formData.electrical}
+                    onChange={handleInputChange}
+                    placeholder="Electrical"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Sound Engineer</label>
+                  <input
+                    type="text"
+                    name="soundEngineer"
+                    value={formData.soundEngineer}
+                    onChange={handleInputChange}
+                    placeholder="Sound Engineer"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Production Control</label>
+                  <input
+                    type="text"
+                    name="productionControl"
+                    value={formData.productionControl}
+                    onChange={handleInputChange}
+                    placeholder="Production Control"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="form-section p-4 md:p-6">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4">Event Timing</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Feed Test Location</label>
+                  <input
+                    type="text"
+                    name="feedTestLocation"
+                    value={formData.feedTestLocation}
+                    onChange={handleInputChange}
+                    placeholder="Feed Test Location"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Feed Test Time</label>
+                  <input
+                    type="time"
+                    name="feedTestTime"
+                    value={formData.feedTestTime}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Start Time</label>
+                  <input
+                    type="time"
+                    name="eventStartTime"
+                    value={formData.eventStartTime}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Event End Time</label>
+                  <input
+                    type="time"
+                    name="eventEndTime"
+                    value={formData.eventEndTime}
+                    onChange={handleInputChange}
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Duration</label>
+                  <input
+                    type="text"
+                    name="eventDuration"
+                    value={formData.eventDuration}
+                    onChange={handleInputChange}
+                    placeholder="Event Duration (e.g., 2 hours)"
+                    className="p-3 border border-gray-300 rounded-lg w-full"
+                    readOnly
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="form-section p-4 md:p-6">
+              <h2 className="text-xl md:text-2xl font-semibold mb-4">Equipment</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                  <thead>
+                    <tr className="table-header">
+                      <th className="p-3 border-b text-center text-sm font-medium">Sr.No.</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Equipment</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Model No.</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Qty</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Installation Time</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Done Time</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">In-House</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Hired</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Vendor Name</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Remarks</th>
+                      <th className="p-3 border-b text-center text-sm font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.equipment.map((item, index) => (
+                      <tr key={index} className="table-row">
+                        <td className="p-3 border-b text-center">{index + 1}</td>
+                        <td className="p-3 border-b text-left">{item.name}</td>
+                        <td className="p-3 border-b">
+                          <input
+                            type="text"
+                            value={item.modelNo}
+                            onChange={(e) => handleEquipmentInput(index, 'modelNo', e.target.value)}
+                            placeholder="Model No."
+                            className="p-2 border border-gray-300 rounded w-full"
+                          />
+                        </td>
+                        <td className="p-3 border-b">
+                          <input
+                            type="text"
+                            value={item.qty}
+                            onChange={(e) => handleEquipmentInput(index, 'qty', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-24"
+                          />
+                        </td>
+                        <td className="p-3 border-b">
+                          <input
+                            type="time"
+                            value={item.installationTime}
+                            onChange={(e) => handleEquipmentInput(index, 'installationTime', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-20"
+                          />
+                        </td>
+                        <td className="p-3 border-b">
+                          <input
+                            type="time"
+                            value={item.doneTime}
+                            onChange={(e) => handleEquipmentInput(index, 'doneTime', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-20"
+                          />
+                        </td>
+                        <td className="p-3 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={item.inHouse}
+                            onChange={() => handleEquipmentCheckbox(index, 'inHouse')}
+                            className="h-4 w-4 text-blue-600 rounded"
+                          />
+                        </td>
+                        <td className="p-3 border-b text-center">
+                          <input
+                            type="checkbox"
+                            checked={item.hired}
+                            onChange={() => handleEquipmentCheckbox(index, 'hired')}
+                            className="h-4 w-4 text-blue-600 rounded"
+                          />
+                        </td>
+                        <td className="p-3 border-b">
+                          {item.hired ? (
+                            <input
+                              type="text"
+                              value={item.vendorName}
+                              onChange={(e) => handleEquipmentInput(index, 'vendorName', e.target.value)}
+                              placeholder="Vendor Name"
+                              className="p-2 border border-gray-300 rounded w-full"
                             />
-                        </div>
-                        <div className="flex justify-center flex-grow">
-                            <h1 className="text-4xl font-bold text-blue-700">
-                                Network 18 Event Report
-                            </h1>
-                        </div>
-                        <div className="w-12"></div>
-                    </div>
-                    <div className="flex items-center mb-8">
-                        <a
-                            href="index.html"
-                            className="glass-effect text-white px-6 py-3 rounded-xl flex items-center justify-center w-12 h-12 hover:text-gray-100 mr-4"
-                        >
-                            <span className="text-xl">🏠</span>
-                        </a>
-                        <div className="flex-1 flex justify-center">
-                            <button 
-                                type="button" 
-                                onClick={generatePDF} 
-                                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200 shadow-md"
-                            >
-                                Generate Report
-                            </button>
-                        </div>
-                    </div>
-                    <div className="flex justify-between mb-6">
-                        <div>
-                            <label htmlFor="daySelection" className="mr-2 text-gray-700">Day:</label>
-                            <select
-                                name="daySelection"
-                                value={formData.daySelection}
-                                onChange={handleInputChange}
-                                className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                <option value="Select">Select</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label htmlFor="createdBy" className="mr-2 text-gray-700">Created By:</label>
-                            <select
-                                name="createdBy"
-                                value={formData.createdBy}
-                                onChange={handleInputChange}
-                                className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                <option value="">Select</option>
-                                <option value="Tyagi">Tyagi</option>
-                                <option value="Kishor">Kishor</option>
-                                <option value="Rajesh">Rajesh</option>
-                                <option value="Virender">Virender</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    <form className="space-y-8">
-                        <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Event Details</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <input type="text" name="eventName" value={formData.eventName} onChange={handleInputChange} placeholder="Event Name" className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" />
-                                <input type="date" name="date" value={formData.date} onChange={handleInputChange} className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" />
-                                <select
-                                    name="channel"
-                                    value={formData.channel}
-                                    onChange={handleInputChange}
-                                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                >
-                                    <option value="">Select Channel</option>
-                                    <option value="Network 18">Network 18</option>
-                                    <option value="News18 India">News18 India</option>
-                                    <option value="CNN News 18">CNN News 18</option>
-                                    <option value="CNBC TV18">CNBC TV18</option>
-                                    <option value="CNBC Awaaz">CNBC Awaaz</option>
-                                    <option value="Money Control">Money Control</option>
-                                    <option value="First Post">First Post</option>
-                                    <option value="Forbes">Forbes</option>
-                                    <option value="News 18 /UP UK">News 18 /UP UK</option>
-                                    <option value="News 18 Rajasthan">News 18 Rajasthan</option>
-                                    <option value="News 18 Bihar /Jharkhand">News 18 Bihar /Jharkhand</option>
-                                    <option value="News 18 Punjab">News 18 Punjab</option>
-                                    <option value="News 18 MP/Chhattisgarh">News 18 MP/Chhattisgarh</option>
-                                    <option value="News 18 JKLHH">News 18 JKLHH</option>
-                                    <option value="News18 Odia">News18 Odia</option>
-                                    <option value="News18 Bangla">News18 Bangla</option>
-                                    <option value="News18 a/north east">News18 a/north east</option>
-                                    <option value="News18 Malayalam">News18 Malayalam</option>
-                                    <option value="News18 Kannada">News18 Kannada</option>
-                                    <option value="News18 Tamilnadu">News18 Tamilnadu</option>
-                                    <option value="News 18 Kerala">News 18 Kerala</option>
-                                    <option value="News 18 Gujrat">News 18 Gujrat</option>
-                                </select>
-                                <select
-                                    name="broadcastType"
-                                    value={formData.broadcastType}
-                                    onChange={handleInputChange}
-                                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                >
-                                    <option value="">Select Broadcast Type</option>
-                                    <option value="Live">Live</option>
-                                    <option value="Recording">Recording</option>
-                                </select>
-                                {formData.broadcastType === 'Live' && (
-                                    <div className="col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Live Platform</label>
-                                        <div className="flex space-x-4">
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.livePlatform.includes('Digital')}
-                                                    onChange={() => handleLivePlatformCheckbox('Digital')}
-                                                    className="h-4 w-4 text-blue-600 rounded mr-2"
-                                                />
-                                                Digital
-                                            </label>
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.livePlatform.includes('TV')}
-                                                    onChange={() => handleLivePlatformCheckbox('TV')}
-                                                    className="h-4 w-4 text-blue-600 rounded mr-2"
-                                                />
-                                                TV
-                                            </label>
-                                        </div>
-                                    </div>
-                                )}
-                                <input type="text" name="location" value={formData.location} onChange={handleInputChange} placeholder="Location/Hotel Name" className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" />
-                                <input type="text" name="city" value={formData.city} onChange={handleInputChange} placeholder="State/City" className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" />
-                                <div className="flex items-center space-x-4">
-                                    <div className="flex-1">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Setup Type</label>
-                                        <div className="flex items-center space-x-4">
-                                            <div className="flex space-x-4">
-                                                <label className="flex items-center">
-                                                    <input
-                                                        type="radio"
-                                                        name="setupType"
-                                                        value="BNC"
-                                                        checked={formData.setupType[0] === 'BNC'}
-                                                        onChange={() => handleSetupTypeRadio('BNC')}
-                                                        className="h-4 w-4 text-blue-600 rounded mr-2"
-                                                    />
-                                                    BNC
-                                                </label>
-                                                <label className="flex items-center">
-                                                    <input
-                                                        type="radio"
-                                                        name="setupType"
-                                                        value="TRIAX"
-                                                        checked={formData.setupType[0] === 'TRIAX'}
-                                                        onChange={() => handleSetupTypeRadio('TRIAX')}
-                                                        className="h-4 w-4 text-blue-600 rounded mr-2"
-                                                    />
-                                                    TRIAX
-                                                </label>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={handleClearSetupType}
-                                                className="bg-red-600 text-white text-xs px-2 py-1 rounded hover:bg-red-700 transition duration-200"
-                                            >
-                                                Clear
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex space-x-4">
-                                    <div className="flex-1">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Camera</label>
-                                        <input
-                                            type="text"
-                                            name="camera"
-                                            value={formData.camera}
-                                            onChange={handleInputChange}
-                                            placeholder="Camera"
-                                            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                        />
-                                    </div>
-                                    <div className="flex-1">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Jimmy Jib</label>
-                                        <input
-                                            type="text"
-                                            name="jimmyJib"
-                                            value={formData.jimmyJib}
-                                            onChange={handleInputChange}
-                                            placeholder="Jimmy Jib"
-                                            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                        />
-                                    </div>
-                                </div>
-                                <select
-                                    name="showType"
-                                    value={formData.showType}
-                                    onChange={handleInputChange}
-                                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                >
-                                    <option value="">Select Show Type</option>
-                                    <option value="Intellectual Property (IP)">Intellectual Property (IP)</option>
-                                    <option value="News">News</option>
-                                    <option value="Focus">Focus</option>
-                                    <option value="Media Partnership">Media Partnership</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Setup Date and Timing</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label htmlFor="setupDate" className="block text-sm font-medium text-gray-700 mb-1">Setup Date</label>
-                                    <input
-                                        type="date"
-                                        name="setupDate"
-                                        value={formData.setupDate}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="setupStartTime" className="block text-sm font-medium text-gray-700 mb-1">Setup Start Time</label>
-                                    <input
-                                        type="time"
-                                        name="setupStartTime"
-                                        value={formData.setupStartTime}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="setupEndTime" className="block text-sm font-medium text-gray-700 mb-1">Setup End Time</label>
-                                    <input
-                                        type="time"
-                                        name="setupEndTime"
-                                        value={formData.setupEndTime}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="checkingDone" className="block text-sm font-medium text-gray-700 mb-1">Checking Done</label>
-                                    <input
-                                        type="time"
-                                        name="checkingDone"
-                                        value={formData.checkingDone}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Team Details</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Event Engineer</label>
-                                    <div className="flex flex-row space-x-4 flex-wrap items-center">
-                                        {['Munendra Kumar Tyagi', 'Kamal Kishore', 'Rajesh Kumar', 'Virendra Singh'].map((engineer) => (
-                                            <label key={engineer} className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.eventEngineer.includes(engineer)}
-                                                    onChange={() => handleEventEngineerCheckbox(engineer)}
-                                                    className="h-4 w-4 text-blue-600 rounded mr-2"
-                                                />
-                                                {engineer}
-                                            </label>
-                                        ))}
-                                        <input
-                                            type="text"
-                                            name="customEngineer"
-                                            value={formData.customEngineer}
-                                            onChange={handleCustomEngineerChange}
-                                            placeholder="Custom Engineer"
-                                            className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48"
-                                        />
-                                    </div>
-                                </div>
-                                <input type="text" name="showProducer" value={formData.showProducer} onChange={handleInputChange} placeholder="Show Producer" className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" />
-                                <input type="text" name="showDop" value={formData.showDop} onChange={handleInputChange} placeholder="Show DOP" className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" />
-                                <input type="text" name="onlineEditor" value={formData.onlineEditor} onChange={handleInputChange} placeholder="Online Editor" className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" />
-                                <input type="text" name="electrical" value={formData.electrical} onChange={handleInputChange} placeholder="Electrical" className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" />
-                                <input type="text" name="soundEngineer" value={formData.soundEngineer} onChange={handleInputChange} placeholder="Sound Engineer" className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" />
-                                <input type="text" name="productionControl" value={formData.productionControl} onChange={handleInputChange} placeholder="Production Control" className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full" />
-                            </div>
-                        </div>
-                        <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Event Timing</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label htmlFor="feedTestLocation" className="block text-sm font-medium text-gray-700 mb-1">Feed Test Location</label>
-                                    <input
-                                        type="text"
-                                        name="feedTestLocation"
-                                        value={formData.feedTestLocation}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                        placeholder="Feed Test Location"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="feedTestTime" className="block text-sm font-medium text-gray-700 mb-1">Feed Test Time</label>
-                                    <input
-                                        type="time"
-                                        name="feedTestTime"
-                                        value={formData.feedTestTime}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="eventStartTime" className="block text-sm font-medium text-gray-700 mb-1">Event Start Time</label>
-                                    <input
-                                        type="time"
-                                        name="eventStartTime"
-                                        value={formData.eventStartTime}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="eventEndTime" className="block text-sm font-medium text-gray-700 mb-1">Event End Time</label>
-                                    <input
-                                        type="time"
-                                        name="eventEndTime"
-                                        value={formData.eventEndTime}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="eventDuration" className="block text-sm font-medium text-gray-700 mb-1">Event Duration</label>
-                                    <input
-                                        type="text"
-                                        name="eventDuration"
-                                        value={formData.eventDuration}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                        placeholder="Event Duration (e.g., 2 hours)"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Equipment</h2>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-                                    <thead>
-                                        <tr className="bg-blue-600 text-white">
-                                            <th className="p-3 border-b text-center text-sm font-medium">Sr.No.</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Equipment</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Model No.</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Qty</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Installation Time</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Done Time</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">In-House</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Hired</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Vendor Name</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Remarks</th>
-                                            <th className="p-3 border-b text-center text-sm font-medium">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {formData.equipment.map((item, index) => (
-                                            <tr key={index} className="hover:bg-gray-100">
-                                                <td className="p-3 border-b text-center">{index + 1}</td>
-                                                <td className="p-3 border-b text-left">{item.name}</td>
-                                                <td className="p-3 border-b">
-                                                    <input
-                                                        type="text"
-                                                        value={item.modelNo}
-                                                        onChange={(e) => handleEquipmentInput(index, 'modelNo', e.target.value)}
-                                                        placeholder="Model No."
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b">
-                                                    <input
-                                                        type="text"
-                                                        value={item.qty}
-                                                        onChange={(e) => handleEquipmentInput(index, 'qty', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-24 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b">
-                                                    <input
-                                                        type="time"
-                                                        value={item.installationTime}
-                                                        onChange={(e) => handleEquipmentInput(index, 'installationTime', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-20 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b">
-                                                    <input
-                                                        type="time"
-                                                        value={item.doneTime}
-                                                        onChange={(e) => handleEquipmentInput(index, 'doneTime', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-20 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b text-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={item.inHouse}
-                                                        onChange={() => handleEquipmentCheckbox(index, 'inHouse')}
-                                                        className="h-4 w-4 text-blue-600 rounded"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b text-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={item.hired}
-                                                        onChange={() => handleEquipmentCheckbox(index, 'hired')}
-                                                        className="h-4 w-4 text-blue-600 rounded"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b">
-                                                    {item.hired ? (
-                                                        <input
-                                                            type="text"
-                                                            value={item.vendorName}
-                                                            onChange={(e) => handleEquipmentInput(index, 'vendorName', e.target.value)}
-                                                            placeholder="Vendor Name"
-                                                            className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                        />
-                                                    ) : (
-                                                        <span>-</span>
-                                                    )}
-                                                </td>
-                                                <td className="p-3 border-b">
-                                                    <input
-                                                        type="text"
-                                                        value={item.remarks}
-                                                        onChange={(e) => handleEquipmentInput(index, 'remarks', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                    />
-                                                </td>
-                                                <td className="p-3 border-b">
-                                                    <input
-                                                        type="text"
+                          ) : (
+                            <span>-</span>
+                          )}
+                        </td>
+                        <td className="p-3 border-b">
+                          <input
+                           type="text"
+                            value={item.remarks}
+                            onChange={(e) => handleEquipmentInput(index, 'remarks', e.target.value)}
+                            className="p-2 border border-gray-300 rounded w-full"
+                          />
+                        </td>
+                        <td className="p-3 border-b">
+                          <input
+                            type="text"
                                                         value={item.status}
                                                         onChange={(e) => handleEquipmentInput(index, 'status', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                        className="p-2 border border-gray-300 rounded w-full"
                                                     />
                                                 </td>
                                             </tr>
@@ -1506,12 +1691,14 @@
                                 </table>
                             </div>
                         </div>
-                        <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Live Source</h2>
+
+                        {/* Live Source Section */}
+                        <div className="form-section p-4 md:p-6">
+                            <h2 className="text-xl md:text-2xl font-semibold mb-4">Live Source</h2>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full bg-white border border-gray-200 rounded-lg">
                                     <thead>
-                                        <tr className="bg-blue-600 text-white">
+                                        <tr className="table-header">
                                             <th className="p-3 border-b text-center text-sm font-medium">Sr.No.</th>
                                             <th className="p-3 border-b text-center text-sm font-medium">Name</th>
                                             <th className="p-3 border-b text-center text-sm font-medium">Available</th>
@@ -1523,14 +1710,14 @@
                                     </thead>
                                     <tbody>
                                         {formData.liveSource.map((item, index) => (
-                                            <tr key={index} className="hover:bg-gray-100">
+                                            <tr key={index} className="table-row">
                                                 <td className="p-3 border-b text-center">{index + 1}</td>
                                                 <td className="p-3 border-b text-left">{item.name}</td>
                                                 <td className="p-3 border-b text-center">
                                                     <select
                                                         value={item.available}
                                                         onChange={(e) => handleLiveSourceInput(index, 'available', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                                                        className="p-2 border border-gray-300 rounded w-full text-center"
                                                     >
                                                         <option value="Select">Select</option>
                                                         <option value="Yes">Yes</option>
@@ -1542,7 +1729,7 @@
                                                         <select
                                                             value={item.source}
                                                             onChange={(e) => handleLiveSourceInput(index, 'source', e.target.value)}
-                                                            className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                                                            className="p-2 border border-gray-300 rounded w-full text-center"
                                                         >
                                                             <option value="">Select</option>
                                                             <option value="LiveU">LiveU</option>
@@ -1552,9 +1739,9 @@
                                                         <select
                                                             value={item.unit}
                                                             onChange={(e) => handleLiveSourceInput(index, 'unit', e.target.value)}
-                                                            className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                                                            className="p-2 border border-gray-300 rounded w-full text-center"
                                                         >
-                                                             <option value="Mbps">Mbps</option>
+                                                            <option value="Mbps">Mbps</option>
                                                             <option value="Gbps">Gbps</option>
                                                         </select>
                                                     )}
@@ -1564,7 +1751,7 @@
                                                         type="text"
                                                         value={item.value}
                                                         onChange={(e) => handleLiveSourceInput(index, 'value', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                                                        className="p-2 border border-gray-300 rounded w-full text-center"
                                                         placeholder="Bandwidth"
                                                     />
                                                 </td>
@@ -1573,7 +1760,7 @@
                                                         type="text"
                                                         value={item.notes}
                                                         onChange={(e) => handleLiveSourceInput(index, 'notes', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                                                        className="p-2 border border-gray-300 rounded w-full text-center"
                                                         placeholder="Enter Note"
                                                     />
                                                 </td>
@@ -1582,7 +1769,7 @@
                                                         type="text"
                                                         value={item.status}
                                                         onChange={(e) => handleLiveSourceInput(index, 'status', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                                                        className="p-2 border border-gray-300 rounded w-full text-center"
                                                         placeholder="Status"
                                                     />
                                                 </td>
@@ -1592,12 +1779,14 @@
                                 </table>
                             </div>
                         </div>
-                        <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Electrical Power Source</h2>
+
+                        {/* Electrical Power Source Section */}
+                        <div className="form-section p-4 md:p-6">
+                            <h2 className="text-xl md:text-2xl font-semibold mb-4">Electrical Power Source</h2>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full bg-white border border-gray-200 rounded-lg">
                                     <thead>
-                                        <tr className="bg-blue-600 text-white">
+                                        <tr className="table-header">
                                             <th className="p-3 border-b text-center text-sm font-medium">Sr.No.</th>
                                             <th className="p-3 border-b text-center text-sm font-medium">Source</th>
                                             <th className="p-3 border-b text-center text-sm font-medium">Available</th>
@@ -1609,14 +1798,14 @@
                                     </thead>
                                     <tbody>
                                         {formData.power.map((item, index) => (
-                                            <tr key={index} className="hover:bg-gray-100">
+                                            <tr key={index} className="table-row">
                                                 <td className="p-3 border-b text-center">{index + 1}</td>
                                                 <td className="p-3 border-b text-left">{item.source}</td>
                                                 <td className="p-3 border-b text-center">
                                                     <select
                                                         value={item.available}
                                                         onChange={(e) => handlePowerInput(index, 'available', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                                                        className="p-2 border border-gray-300 rounded w-full text-center"
                                                     >
                                                         <option value="">Select</option>
                                                         <option value="Yes">Yes</option>
@@ -1628,7 +1817,7 @@
                                                         type="text"
                                                         value={item.kVA}
                                                         onChange={(e) => handlePowerInput(index, 'kVA', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                                                        className="p-2 border border-gray-300 rounded w-full text-center"
                                                         placeholder="kVA"
                                                     />
                                                 </td>
@@ -1637,7 +1826,7 @@
                                                         type="text"
                                                         value={item.enterValue}
                                                         onChange={(e) => handlePowerInput(index, 'enterValue', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                                                        className="p-2 border border-gray-300 rounded w-full text-center"
                                                         placeholder="Enter Value"
                                                     />
                                                 </td>
@@ -1646,7 +1835,7 @@
                                                         type="text"
                                                         value={item.note}
                                                         onChange={(e) => handlePowerInput(index, 'note', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                                                        className="p-2 border border-gray-300 rounded w-full text-center"
                                                         placeholder="Note"
                                                     />
                                                 </td>
@@ -1655,7 +1844,7 @@
                                                         type="text"
                                                         value={item.status}
                                                         onChange={(e) => handlePowerInput(index, 'status', e.target.value)}
-                                                        className="p-2 border border-gray-300 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                                                        className="p-2 border border-gray-300 rounded w-full text-center"
                                                         placeholder="Status"
                                                     />
                                                 </td>
@@ -1665,102 +1854,157 @@
                                 </table>
                             </div>
                         </div>
-                        <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Engineer Comments & Signature (Day 1)</h2>
-                            <textarea
-                                name="eventEngineerComments"
-                                value={formData.eventEngineerComments}
-                                onChange={handleInputChange}
-                                placeholder="Event Engineer Comments & Remarks"
-                                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full h-20"
-                            ></textarea>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <input
-                                    type="text"
-                                    name="signature"
-                                    value={formData.signature}
-                                    onChange={handleInputChange}
-                                    placeholder="Signature"
-                                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                />
-                                <input
-                                    type="date"
-                                    name="signatureDate"
-                                    value={formData.signatureDate}
-                                    onChange={handleInputChange}
-                                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                />
-                            </div>
-                        </div>
-                        {isSecondDayDetailsVisible && (
-                            <div className="bg-gray-50 p-6 rounded-lg shadow-inner border border-gray-100">
-                                <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Second Day Details</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <input
-                                        type="date"
-                                        name="secondDate"
-                                        value={formData.secondDate}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="secondCheckingDone"
-                                        value={formData.secondCheckingDone}
-                                        onChange={handleInputChange}
-                                        placeholder="Checking Done"
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="secondFeedTestLocation"
-                                        value={formData.secondFeedTestLocation}
-                                        onChange={handleInputChange}
-                                        placeholder="Feed Test Location"
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                    <input
-                                        type="time"
-                                        name="secondFeedTestTime"
-                                        value={formData.secondFeedTestTime}
-                                        onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="secondEventDuration"
-                                        value={formData.secondEventDuration}
-                                        onChange={handleInputChange}
-                                        placeholder="Event Duration"
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                                    />
-                                </div>
+
+                        {/* Engineer Comments & Signature (Day 1) Section */}
+                        <div className="form-section p-4 md:p-6">
+                            <h2 className="text-xl md:text-2xl font-semibold mb-4">Engineer Comments & Signature (Day 1)</h2>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Comments</label>
                                 <textarea
-                                    name="secondEventEngineerComments"
-                                    value={formData.secondEventEngineerComments}
+                                    name="eventEngineerComments"
+                                    value={formData.eventEngineerComments}
                                     onChange={handleInputChange}
-                                    placeholder="Event Engineer Comments & Remarks (Day 2)"
-                                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full h-20 mt-4"
+                                    placeholder="Event Engineer Comments & Remarks"
+                                    className="p-3 border border-gray-300 rounded-lg w-full h-20"
                                 ></textarea>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Signature</label>
                                     <input
                                         type="text"
-                                        name="secondSignature"
-                                        value={formData.secondSignature}
+                                        name="signature"
+                                        value={formData.signature}
                                         onChange={handleInputChange}
                                         placeholder="Signature"
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+                                        className="p-3 border border-gray-300 rounded-lg w-full"
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                                     <input
                                         type="date"
-                                        name="secondSignatureDate"
-                                        value={formData.secondSignatureDate}
+                                        name="signatureDate"
+                                        value={formData.signatureDate}
                                         onChange={handleInputChange}
-                                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+                                        className="p-3 border border-gray-300 rounded-lg w-full"
                                     />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Second Day Details Section (if applicable) */}
+                        {isSecondDayDetailsVisible && (
+                            <div className="form-section p-4 md:p-6">
+                                <h2 className="text-xl md:text-2xl font-semibold mb-4">Second Day Details</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                        <input
+                                            type="date"
+                                            name="secondDate"
+                                            value={formData.secondDate}
+                                            onChange={handleInputChange}
+                                            className="p-3 border border-gray-300 rounded-lg w-full"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Checking Done</label>
+                                        <input
+                                            type="text"
+                                            name="secondCheckingDone"
+                                            value={formData.secondCheckingDone}
+                                            onChange={handleInputChange}
+                                            placeholder="Checking Done"
+                                            className="p-3 border border-gray-300 rounded-lg w-full"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Feed Test Location</label>
+                                        <input
+                                            type="text"
+                                            name="secondFeedTestLocation"
+                                            value={formData.secondFeedTestLocation}
+                                            onChange={handleInputChange}
+                                            placeholder="Feed Test Location"
+                                            className="p-3 border border-gray-300 rounded-lg w-full"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Feed Test Time</label>
+                                        <input
+                                            type="time"
+                                            name="secondFeedTestTime"
+                                            value={formData.secondFeedTestTime}
+                                            onChange={handleInputChange}
+                                            className="p-3 border border-gray-300 rounded-lg w-full"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Event Duration</label>
+                                        <input
+                                            type="text"
+                                            name="secondEventDuration"
+                                            value={formData.secondEventDuration}
+                                            onChange={handleInputChange}
+                                            placeholder="Event Duration"
+                                            className="p-3 border border-gray-300 rounded-lg w-full"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Comments (Day 2)</label>
+                                    <textarea
+                                        name="secondEventEngineerComments"
+                                        value={formData.secondEventEngineerComments}
+                                        onChange={handleInputChange}
+                                        placeholder="Event Engineer Comments & Remarks (Day 2)"
+                                        className="p-3 border border-gray-300 rounded-lg w-full h-20"
+                                    ></textarea>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Signature</label>
+                                        <input
+                                            type="text"
+                                            name="secondSignature"
+                                            value={formData.secondSignature}
+                                            onChange={handleInputChange}
+                                            placeholder="Signature"
+                                            className="p-3 border border-gray-300 rounded-lg w-full"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                        <input
+                                            type="date"
+                                            name="secondSignatureDate"
+                                            value={formData.secondSignatureDate}
+                                            onChange={handleInputChange}
+                                            className="p-3 border border-gray-300 rounded-lg w-full"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
+
+                        {/* Form Submission Buttons */}
+                        <div className="flex justify-center space-x-4 mt-8">
+                            <button 
+                                type="button" 
+                                onClick={generatePDF}
+                                className="btn-primary px-6 py-3 rounded-lg"
+                            >
+                                Generate PDF Report
+                            </button>
+                            <button 
+                                type="button" 
+                                onClick={generateExcel}
+                                className="btn-secondary px-6 py-3 rounded-lg"
+                            >
+                                Generate Excel Report
+                            </button>
+                        </div>
                     </form>
                 </div>
             );
