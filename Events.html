@@ -108,6 +108,21 @@
     .vendor-chip:hover {
       transform: scale(1.05);
     }
+    /* New table styling for auto-adjusting columns */
+    table {
+      table-layout: auto;
+      width: 100%;
+    }
+    td, th {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+    }
+    td:hover, th:hover {
+      overflow: visible;
+      white-space: normal;
+    }
   </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -814,32 +829,20 @@
               cellPadding: 0.5,
             },
             margin: { left: margin, right: margin },
-            tableWidth: pageWidth - (margin * 2),
-            columnStyles: hasHiredEquipment
-              ? {
-                  0: { cellWidth: 8 },
-                  1: { cellWidth: 25 },
-                  2: { cellWidth: 15 },
-                  3: { cellWidth: 8 },
-                  4: { cellWidth: 12 },
-                  5: { cellWidth: 12 },
-                  6: { cellWidth: 12 },
-                  7: { cellWidth: 12 },
-                  8: { cellWidth: 15 },
-                  9: { cellWidth: 20 },
-                  10: { cellWidth: 12 },
-                }
-              : {
-                  0: { cellWidth: 8 },
-                  1: { cellWidth: 30 },
-                  2: { cellWidth: 20 },
-                  3: { cellWidth: 12 },
-                  4: { cellWidth: 15 },
-                  5: { cellWidth: 15 },
-                  6: { cellWidth: 15 },
-                  7: { cellWidth: 25 },
-                  8: { cellWidth: 15 },
-                },
+            tableWidth: 'auto',
+            columnStyles: {
+              0: { cellWidth: 'auto' },
+              1: { cellWidth: 'auto' },
+              2: { cellWidth: 'auto' },
+              3: { cellWidth: 'auto' },
+              4: { cellWidth: 'auto' },
+              5: { cellWidth: 'auto' },
+              6: { cellWidth: 'auto' },
+              7: { cellWidth: 'auto' },
+              8: { cellWidth: 'auto' },
+              9: { cellWidth: 'auto' },
+              10: { cellWidth: 'auto' }
+            }
           });
           y = doc.lastAutoTable.finalY + 3;
 
@@ -879,16 +882,16 @@
               cellPadding: 0.5,
             },
             margin: { left: margin, right: margin },
-            tableWidth: pageWidth - (margin * 2),
+            tableWidth: 'auto',
             columnStyles: {
-              0: { cellWidth: 8 },
-              1: { cellWidth: 25 },
-              2: { cellWidth: 15 },
-              3: { cellWidth: 15 },
-              4: { cellWidth: 15 },
-              5: { cellWidth: 35 },
-              6: { cellWidth: 15 },
-            },
+              0: { cellWidth: 'auto' },
+              1: { cellWidth: 'auto' },
+              2: { cellWidth: 'auto' },
+              3: { cellWidth: 'auto' },
+              4: { cellWidth: 'auto' },
+              5: { cellWidth: 'auto' },
+              6: { cellWidth: 'auto' }
+            }
           });
           y = doc.lastAutoTable.finalY + 3;
 
@@ -928,16 +931,16 @@
               cellPadding: 0.5,
             },
             margin: { left: margin, right: margin },
-            tableWidth: pageWidth - (margin * 2),
+            tableWidth: 'auto',
             columnStyles: {
-              0: { cellWidth: 8 },
-              1: { cellWidth: 25 },
-              2: { cellWidth: 15 },
-              3: { cellWidth: 15 },
-              4: { cellWidth: 15 },
-              5: { cellWidth: 35 },
-              6: { cellWidth: 15 },
-            },
+              0: { cellWidth: 'auto' },
+              1: { cellWidth: 'auto' },
+              2: { cellWidth: 'auto' },
+              3: { cellWidth: 'auto' },
+              4: { cellWidth: 'auto' },
+              5: { cellWidth: 'auto' },
+              6: { cellWidth: 'auto' }
+            }
           });
           y = doc.lastAutoTable.finalY + 3;
 
@@ -1166,17 +1169,17 @@
 
           const ws = XLSX.utils.aoa_to_sheet(wsData);
           const wscols = [
-            { wch: 5 },
-            { wch: 20 },
-            { wch: 15 },
-            { wch: 10 },
-            { wch: 20 },
-            { wch: 15 },
-            { wch: 10 },
-            { wch: 10 },
-            { wch: 20 },
-            { wch: 30 },
-            { wch: 15 },
+            { wch: 5 },  // Sr.No.
+            { wch: 20 }, // Equipment
+            { wch: 15 }, // Model No.
+            { wch: 10 }, // Qty
+            { wch: 20 }, // Installation Time
+            { wch: 15 }, // Done Time
+            { wch: 10 }, // In-House
+            { wch: 10 }, // Hired
+            { wch: 20 }, // Vendor Name
+            { wch: 30 }, // Remarks
+            { wch: 15 }  // Status
           ];
           ws['!cols'] = wscols;
 
@@ -1724,7 +1727,7 @@
               </div>
               
               <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                <table className="min-w-full bg-white border border-gray-200 rounded-lg" style={{ tableLayout: 'auto', width: '100%' }}>
                   <thead>
                     <tr className="table-header">
                       <th className="p-3 border-b text-center text-sm font-medium">Sr.No.</th>
@@ -1849,7 +1852,7 @@
             <div className="form-section p-4 md:p-6">
               <h2 className="text-xl md:text-2xl font-semibold mb-4">Live Source</h2>
               <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                <table className="min-w-full bg-white border border-gray-200 rounded-lg" style={{ tableLayout: 'auto', width: '100%' }}>
                   <thead>
                     <tr className="table-header">
                       <th className="p-3 border-b text-center text-sm font-medium">Sr.No.</th>
@@ -1936,7 +1939,7 @@
             <div className="form-section p-4 md:p-6">
               <h2 className="text-xl md:text-2xl font-semibold mb-4">Electrical Power Source</h2>
               <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                <table className="min-w-full bg-white border border-gray-200 rounded-lg" style={{ tableLayout: 'auto', width: '100%' }}>
                   <thead>
                     <tr className="table-header">
                       <th className="p-3 border-b text-center text-sm font-medium">Sr.No.</th>
