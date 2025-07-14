@@ -219,7 +219,7 @@
       const [vendors, setVendors] = React.useState(() => {
         const savedVendors = localStorage.getItem('network18-vendors');
         return savedVendors ? JSON.parse(savedVendors) : [
-          "JayTech", "Jeeva", "KVS LKO", "GKS Media"
+          "JayTech", "Jeeva", "KVS LKO", "GKS Media", "Dakesh Films"
         ];
       });
       const [globalVendor, setGlobalVendor] = React.useState('');
@@ -275,6 +275,7 @@
           { name: 'Watchout / Vmix', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
           { name: 'Main Sound', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
           { name: 'PCR UPS', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
+          { name: '', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' }
         ],
         liveSource: [
           { name: 'Uplink Main', available: 'Select', source: '', value: '', notes: '', status: '' },
@@ -784,7 +785,7 @@
             : ['#', 'Equipment', 'Model', 'Qty', 'Install', 'Done', 'In-House', 'Remarks', 'Status'];
 
           const equipmentData = formData.equipment
-            .filter(item => item.modelNo || item.qty || item.installationTime || item.doneTime || item.inHouse || item.hired || item.remarks || item.status)
+            .filter(item => item.name || item.modelNo || item.qty || item.installationTime || item.doneTime || item.inHouse || item.hired || item.remarks || item.status)
             .map((item, index) => {
               const baseRow = [
                 index + 1,
@@ -1047,7 +1048,7 @@
             : ['Sr.No.', 'Equipment', 'Model No.', 'Qty', 'Installation Time', 'Done Time', 'In-House', 'Remarks', 'Status'];
 
           const equipmentData = formData.equipment
-            .filter(item => item.modelNo || item.qty || item.installationTime || item.doneTime || item.inHouse || item.hired || item.remarks || item.status)
+            .filter(item => item.name || item.modelNo || item.qty || item.installationTime || item.doneTime || item.inHouse || item.hired || item.remarks || item.status)
             .map((item, index) => {
               const baseRow = [
                 index + 1,
@@ -1725,6 +1726,12 @@
                   ))}
                 </div>
               </div>
+
+              <datalist id="vendor-list">
+                {vendors.map(vendor => (
+                  <option key={vendor} value={vendor} />
+                ))}
+              </datalist>
               
               <div className="overflow-x-auto">
                 <table className="min-w-full bg-white border border-gray-200 rounded-lg" style={{ tableLayout: 'auto', width: '100%' }}>
@@ -1747,7 +1754,15 @@
                     {formData.equipment.map((item, index) => (
                       <tr key={index} className="table-row">
                         <td className="p-3 border-b text-center">{index + 1}</td>
-                        <td className="p-3 border-b text-left">{item.name}</td>
+                        <td className="p-3 border-b text-left">
+                          <input
+                            type="text"
+                            value={item.name}
+                            onChange={(e) => handleEquipmentInput(index, 'name', e.target.value)}
+                            placeholder="Equipment Name"
+                            className="p-2 border border-gray-300 rounded w-full"
+                          />
+                        </td>
                         <td className="p-3 border-b">
                           <input
                             type="text"
@@ -1800,20 +1815,20 @@
                         <td className="p-3 border-b">
                           {item.hired ? (
                             <div className="flex items-center">
-                              <select
+                              <input
+                                type="text"
                                 value={item.vendorName}
-                                onChange={(e) => {
-                                  handleEquipmentInput(index, 'vendorName', e.target.value);
-                                  addVendor(e.target.value);
+                                onChange={(e) => handleEquipmentInput(index, 'vendorName', e.target.value)}
+                                onBlur={(e) => {
+                                  const value = e.target.value;
+                                  if (value && !vendors.includes(value)) {
+                                    addVendor(value);
+                                  }
                                 }}
-                                className="p-2 border border-gray-300 rounded w-full mr-2"
                                 list="vendor-list"
-                              >
-                                <option value="">Select Vendor</option>
-                                {vendors.map(vendor => (
-                                  <option key={vendor} value={vendor}>{vendor}</option>
-                                ))}
-                              </select>
+                                className="p-2 border border-gray-300 rounded w-full mr-2"
+                                placeholder="Select or enter vendor"
+                              />
                               <button
                                 onClick={() => handleEquipmentInput(index, 'vendorName', globalVendor)}
                                 className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
