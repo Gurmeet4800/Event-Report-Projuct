@@ -274,8 +274,7 @@
           { name: 'Anchor EP', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
           { name: 'Watchout / Vmix', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
           { name: 'Main Sound', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-          { name: 'PCR UPS', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' },
-          { name: '', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' }
+          { name: 'PCR UPS', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' }
         ],
         liveSource: [
           { name: 'Uplink Main', available: 'Select', source: '', value: '', notes: '', status: '' },
@@ -311,6 +310,13 @@
           setVendors(newVendors);
           localStorage.setItem('network18-vendors', JSON.stringify(newVendors));
         }
+      };
+
+      const addNewEquipment = () => {
+        setFormData(prev => ({
+          ...prev,
+          equipment: [...prev.equipment, { name: '', modelNo: '', qty: '', installationTime: '', doneTime: '', inHouse: false, hired: false, vendorName: '', remarks: '', status: '' }]
+        }));
       };
 
       const handleInputChange = (e) => {
@@ -1862,6 +1868,13 @@
                   </tbody>
                 </table>
               </div>
+              <button 
+                type="button" 
+                onClick={addNewEquipment}
+                className="btn-primary px-4 py-2 rounded-lg mt-4"
+              >
+                Add New Equipment
+              </button>
             </div>
 
             <div className="form-section p-4 md:p-6">
